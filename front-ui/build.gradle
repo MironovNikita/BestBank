@@ -4,15 +4,17 @@ plugins {
     id 'io.spring.dependency-management'
 }
 
-description = 'Configuration Service'
+description = 'Front UI Service'
 
 dependencies {
-    implementation "org.springframework.cloud:spring-cloud-config-server" exclude group: "net.i2p.crypto", module: "eddsa"
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     //testImplementation platform('org.junit:junit-bom:5.10.0')
     //testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 springBoot {
-    mainClass = 'com.bank.ConfigServiceApp'
+    mainClass = 'com.bank.FrontUIApp'
 }
