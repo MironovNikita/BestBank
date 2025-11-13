@@ -16,4 +16,5 @@ include 'config-service'
 include 'front-ui'
 include 'discovery-service'
 include 'gateway-service'
+include 'accounts-service'
 

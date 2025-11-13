@@ -8,7 +8,6 @@ description = 'Front UI Service'
 
 dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
-
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     //testImplementation platform('org.junit:junit-bom:5.10.0')
