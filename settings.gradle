@@ -20,4 +20,5 @@ include 'transfers-service'
 include 'front-ui'
 include 'cash-service'
 include 'notification-service'
+include 'common'
 
