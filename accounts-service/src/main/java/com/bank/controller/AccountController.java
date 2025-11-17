@@ -1,10 +1,11 @@
 package com.bank.controller;
 
-import com.bank.dto.AccountServiceResponse;
-import com.bank.entity.AccountMainPageDto;
+import com.bank.dto.AccountMainPageDto;
+import com.bank.dto.AccountPasswordChangeDto;
+import com.bank.dto.RegisterAccountRequest;
 import com.bank.entity.AccountUpdateDto;
-import com.bank.entity.PasswordChangeDto;
-import com.bank.entity.RegisterAccountRequest;
+import com.bank.login.LoginRequest;
+import com.bank.login.LoginResponse;
 import com.bank.service.AccountServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
+@RequestMapping("/accounts")
 @RequiredArgsConstructor
 public class AccountController {
 
@@ -20,24 +22,27 @@ public class AccountController {
     private final AccountServiceImpl accountService;
 
     @PostMapping("/register")
-    public Mono<AccountServiceResponse> register(@RequestBody @Validated RegisterAccountRequest registerRequest) {
+    public Mono<Void> register(@RequestBody @Validated RegisterAccountRequest registerRequest) {
         return accountService.register(registerRequest);
     }
 
-    @GetMapping("/accounts")
-    public Flux<AccountMainPageDto> getAllAccounts() {
-        return accountService.getAllAccounts();
+    @GetMapping("/{id}")
+    public Flux<AccountMainPageDto> getAllAccounts(@PathVariable(name = "id") Long requestedId) {
+        return accountService.getAllAccounts(requestedId);
     }
 
-    @PostMapping("/accounts/{id}/editPassword")
-    public Mono<AccountServiceResponse> editPassword(@PathVariable("id") Long id, @Validated @RequestBody PasswordChangeDto passwordChangeDto) {
+    @PostMapping("/{id}/editPassword")
+    public Mono<Void> editPassword(@PathVariable(name = "id") Long id, @Validated @RequestBody AccountPasswordChangeDto passwordChangeDto) {
         return accountService.editPassword(id, passwordChangeDto);
     }
 
-    @PostMapping("/accounts/{id}/editAccount")
-    public Mono<AccountServiceResponse> editAccount(@PathVariable("id") Long id, @Validated @RequestBody AccountUpdateDto accountUpdateDto) {
+    @PostMapping("/{id}/editAccount")
+    public Mono<Void> editAccount(@PathVariable("id") Long id, @Validated @RequestBody AccountUpdateDto accountUpdateDto) {
         return accountService.editAccount(id, accountUpdateDto);
     }
 
-    //TODO Добавить эндпоинт логина для проверки логина/пароля
+    @PostMapping("/login")
+    public Mono<LoginResponse> login(@Validated @RequestBody LoginRequest loginRequest) {
+        return accountService.login(loginRequest);
+    }
 }

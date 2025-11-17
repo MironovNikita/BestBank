@@ -1,6 +1,5 @@
-package com.bank.common.security;
+package com.bank.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -9,8 +8,7 @@ import java.util.Base64;
 @Component
 public class SecureBase64Converter {
 
-    @Value("${keycloak.credentials.secret}")
-    private String SECRET_KEY;
+    private static final String SECRET_KEY = "my-secret";
 
     public String encrypt(String attribute) {
         if (attribute == null || attribute.isEmpty()) return null;

@@ -1,24 +1,27 @@
 package com.bank.service;
 
+import com.bank.common.exception.LoginException;
 import com.bank.common.exception.ObjectNotFoundException;
 import com.bank.common.exception.PasswordEditException;
 import com.bank.common.exception.RegistrationException;
 import com.bank.common.mapper.AccountMapper;
-import com.bank.common.security.SecureBase64Converter;
-import com.bank.dto.AccountServiceResponse;
-import com.bank.entity.*;
+import com.bank.dto.AccountMainPageDto;
+import com.bank.dto.AccountPasswordChangeDto;
+import com.bank.dto.RegisterAccountRequest;
+import com.bank.entity.Account;
+import com.bank.entity.AccountUpdateDto;
+import com.bank.login.LoginRequest;
+import com.bank.login.LoginResponse;
 import com.bank.repository.AccountRepository;
+import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -34,18 +37,11 @@ public class AccountServiceImpl {
     private final SecureBase64Converter converter;
 
     @Transactional
-    public Mono<AccountServiceResponse> register(RegisterAccountRequest req) {
+    public Mono<Void> register(RegisterAccountRequest req) {
         Account account = accountMapper.toAccount(req);
 
         return accountRepository.save(account)
-                .map(acc -> {
-                    log.info("Пользователь с email {} был успешно зарегистрирован (ID: {})", req.getEmail(), acc.getId());
-                    return new AccountServiceResponse(
-                            HttpStatus.CREATED.value(),
-                            true,
-                            List.of()
-                    );
-                })
+                .doOnSuccess(acc -> log.info("Успешное создание аккаунта с ID: {}", acc.getId()))
                 .onErrorResume(ex -> {
                     if (ex instanceof DataIntegrityViolationException) {
                         log.error("При регистрации пользователя с email {} указаны уже существующие параметры: {}", req.getEmail(), ex.getMessage());
@@ -53,15 +49,16 @@ public class AccountServiceImpl {
                     }
                     log.error("При регистрации пользователя с email {} возникла ошибка: {}", req.getEmail(), ex.getMessage());
                     return Mono.error(ex);
-                });
+                })
+                .then();
     }
 
-    public Flux<AccountMainPageDto> getAllAccounts() {
-        return accountRepository.getAllAccountsForMainPage();
+    public Flux<AccountMainPageDto> getAllAccounts(Long requestedId) {
+        return accountRepository.getAllAccountsForMainPage(requestedId);
     }
 
     @Transactional
-    public Mono<AccountServiceResponse> editPassword(Long id, PasswordChangeDto passwordChangeDto) {
+    public Mono<Void> editPassword(Long id, AccountPasswordChangeDto passwordChangeDto) {
         String newPassword = passwordChangeDto.getNewPassword();
         String confirmPassword = passwordChangeDto.getConfirmPassword();
 
@@ -71,20 +68,28 @@ public class AccountServiceImpl {
         }
 
         return accountRepository.findAccountById(id)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("Ошибка изменения пароля. Пользователь с id {} не был найден.", id);
+                    return Mono.error(new ObjectNotFoundException("Аккаунт", id));
+                }))
                 .flatMap(account -> {
+                    if (passwordEncoder.matches(newPassword, account.getPassword())) return Mono.error(new PasswordEditException());
                     account.setPassword(passwordEncoder.encode(newPassword));
                     return accountRepository.save(account)
-                            .doOnSuccess(saved -> log.info("Пароль для пользователя с ID {} успешно обновлён.", saved.getId()))
-                            .thenReturn(new AccountServiceResponse(HttpStatus.OK.value(), true, List.of()));
+                            .doOnSuccess(saved -> log.info("Пароль для пользователя с ID {} успешно обновлён.", saved.getId()));
                 })
                 .doOnError(error -> log.error("Ошибка обновления пароля для пользователя с ID {}: {}", id, error.getMessage()))
-                .switchIfEmpty(Mono.error(new ObjectNotFoundException("Аккаунт", id)));
+                .then();
     }
 
     @Transactional
-    public Mono<AccountServiceResponse> editAccount(Long id, AccountUpdateDto accountUpdateDto) {
+    public Mono<Void> editAccount(Long id, AccountUpdateDto accountUpdateDto) {
 
         return accountRepository.findAccountById(id)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("Ошибка изменения данных аккаунта. Пользователь с id {} не был найден.", id);
+                    return Mono.error(new ObjectNotFoundException("Аккаунт", id));
+                }))
                 .flatMap(account -> {
                     if (checkField(accountUpdateDto.getEmail())) account.setEmail(converter.encrypt(accountUpdateDto.getEmail()));
                     if (checkField(accountUpdateDto.getName())) account.setName(accountUpdateDto.getName());
@@ -92,11 +97,27 @@ public class AccountServiceImpl {
                     if (checkField(accountUpdateDto.getPhone())) account.setPhone(accountUpdateDto.getPhone());
                     if (accountUpdateDto.getBirthdate() != null) account.setBirthdate(accountUpdateDto.getBirthdate());
                     return accountRepository.save(account)
-                            .doOnSuccess(saved -> log.info("Данные пользователя с ID {} были успешно обновлены.", saved.getId()))
-                            .thenReturn(new AccountServiceResponse(HttpStatus.OK.value(), true, List.of()));
+                            .doOnSuccess(saved -> log.info("Данные пользователя с ID {} были успешно обновлены.", saved.getId()));
                 })
                 .doOnError(error -> log.error("Ошибка обновления данных для пользователя с ID {}: {}", id, error.getMessage()))
-                .switchIfEmpty(Mono.error(new ObjectNotFoundException("Аккаунт", id)));
+                .then();
+    }
+
+    public Mono<LoginResponse> login(LoginRequest loginRequest) {
+        return accountRepository.getAccountByEmail(converter.encrypt(loginRequest.getEmail().toLowerCase()))
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("Ошибка входа. Пользователь с email {} не найден.", loginRequest.getEmail());
+                    return Mono.error(new LoginException());
+                }))
+                .flatMap(account -> {
+                    if (passwordEncoder.matches(loginRequest.getPassword(), account.getPassword())) {
+                        log.info("Успешная проверка credentials для пользователя с email {}", loginRequest.getEmail());
+                        return Mono.just(new LoginResponse().setId(account.getId()).setEmail(account.getEmail()).setName(account.getName()));
+                    } else {
+                        log.error("Ошибка входа. Неверный пароль для email: {}", loginRequest.getEmail());
+                        return Mono.error(new LoginException());
+                    }
+                });
     }
 
     private boolean checkField(String field) {

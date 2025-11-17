@@ -1,7 +1,7 @@
-package com.bank.entity;
+package com.bank.dto;
 
-import com.bank.common.validation.Adult;
-import com.bank.common.validation.Phone;
+import com.bank.validation.Adult;
+import com.bank.validation.Phone;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 

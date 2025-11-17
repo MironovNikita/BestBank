@@ -1,4 +1,4 @@
-package com.bank.common.validation;
+package com.bank.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

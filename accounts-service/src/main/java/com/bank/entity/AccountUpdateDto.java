@@ -1,7 +1,7 @@
 package com.bank.entity;
 
-import com.bank.common.validation.Adult;
-import com.bank.common.validation.Phone;
+import com.bank.validation.Adult;
+import com.bank.validation.Phone;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
