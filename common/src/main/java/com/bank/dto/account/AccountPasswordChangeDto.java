@@ -1,4 +1,4 @@
-package com.bank.dto;
+package com.bank.dto.account;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

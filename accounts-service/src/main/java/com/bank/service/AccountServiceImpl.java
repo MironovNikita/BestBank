@@ -5,10 +5,12 @@ import com.bank.common.exception.ObjectNotFoundException;
 import com.bank.common.exception.PasswordEditException;
 import com.bank.common.exception.RegistrationException;
 import com.bank.common.mapper.AccountMapper;
-import com.bank.dto.AccountMainPageDto;
-import com.bank.dto.AccountPasswordChangeDto;
-import com.bank.dto.AccountUpdateDto;
-import com.bank.dto.RegisterAccountRequest;
+import com.bank.dto.account.AccountMainPageDto;
+import com.bank.dto.account.AccountPasswordChangeDto;
+import com.bank.dto.account.AccountUpdateDto;
+import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.cash.BalanceDto;
+import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.entity.Account;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
@@ -118,6 +120,20 @@ public class AccountServiceImpl {
                         return Mono.error(new LoginException());
                     }
                 });
+    }
+
+    public Mono<BalanceDto> getBalance(Long accountId) {
+        return accountRepository.getAccountBalance(accountId)
+                .flatMap(balance -> {
+                    log.info("Был запрошен баланс для аккаунта с ID {}", accountId);
+                    return Mono.just(new BalanceDto(accountId, balance));
+                });
+    }
+
+    @Transactional
+    public Mono<Void> updateBalance(Long accountId, UpdateBalanceRq updateBalanceRq) {
+        return accountRepository.updateAccountBalance(accountId, updateBalanceRq.getBalance())
+                .doOnSuccess(v -> log.info("Баланс для аккаунта с ID {} был успешно изменён", accountId));
     }
 
     private boolean checkField(String field) {

@@ -10,19 +10,13 @@ public class WebClientConfig {
 
     @Bean
     @LoadBalanced
-    public WebClient.Builder loadBalancedWebClientBuilder() {
-        return WebClient.builder();
+    public WebClient.Builder accountsWebClientBuilder() {
+        return WebClient.builder()
+                .baseUrl("lb://accounts-service");
     }
 
     @Bean
     public WebClient accountsWebClient() {
-        return loadBalancedWebClientBuilder().clone().baseUrl("lb://accounts-service").build();
+        return accountsWebClientBuilder().build();
     }
-
-    @Bean
-    public WebClient cashWebClient() {
-        return loadBalancedWebClientBuilder().clone().baseUrl("lb://cash-service").build();
-    }
-
-
 }

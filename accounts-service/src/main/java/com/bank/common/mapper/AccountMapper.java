@@ -1,6 +1,6 @@
 package com.bank.common.mapper;
 
-import com.bank.dto.RegisterAccountRequest;
+import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.entity.Account;
 import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;

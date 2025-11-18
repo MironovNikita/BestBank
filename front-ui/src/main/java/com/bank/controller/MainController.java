@@ -1,14 +1,14 @@
 package com.bank.controller;
 
-import com.bank.dto.AccountMainPageDto;
-import com.bank.dto.AccountPasswordChangeDto;
-import com.bank.dto.AccountUpdateDto;
-import com.bank.dto.RegisterAccountRequest;
+import com.bank.dto.account.AccountMainPageDto;
+import com.bank.dto.account.AccountPasswordChangeDto;
+import com.bank.dto.account.AccountUpdateDto;
+import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.cash.CashOperationDto;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
 import com.bank.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,19 +28,16 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+//TODO Разбить на меньшие контроллеры
+
 @Controller
 @RequiredArgsConstructor
 public class MainController {
 
     private final WebClient accountsWebClient;
+    private final WebClient cashWebClient;
     private final ReactiveAuthenticationManager authenticationManager;
     private final ServerSecurityContextRepository securityContextRepository;
-
-    @Value("${spring.webflux.base-path}")
-    private String basePath;
-
-    @Value("${spring.cloud.gateway.discovery.routes[0].uri}")
-    private String accountServiceUrl;
 
     @GetMapping("/register")
     public Mono<String> registerPage() {
@@ -73,8 +70,6 @@ public class MainController {
 
     @GetMapping("/login")
     public Mono<String> loginPage() {
-        //model.addAttribute("accountServiceUrl", accountServiceUrl);
-
         return Mono.just("login");
     }
 
@@ -209,6 +204,59 @@ public class MainController {
                 });
     }
 
+    @PostMapping("/cash")
+    public Mono<String> operateCash(ServerWebExchange exchange,
+                                    WebSession session) {
+
+        return checkUserId(session)
+                .flatMap(userId ->
+                        exchange.getFormData()
+                                .flatMap(form -> {
+
+                                    String amountStr = form.getFirst("amount");
+                                    String action = form.getFirst("action");
+
+                                    if (amountStr == null || action == null) {
+                                        session.getAttributes().put("cashErrors", List.of("Поля формы заполнены некорректно!"));
+                                        return Mono.just("redirect:/main");
+                                    }
+
+                                    Long amount;
+                                    try {
+                                        amount = Long.valueOf(amountStr);
+                                    } catch (NumberFormatException e) {
+                                        session.getAttributes().put("cashErrors",
+                                                List.of("Некорректная сумма!"));
+                                        return Mono.just("redirect:/main");
+                                    }
+
+                                    CashOperationDto cashOperationDto = new CashOperationDto(userId, action, amount);
+
+                                    return cashWebClient
+                                            .post()
+                                            .uri("/cash")
+                                            .bodyValue(cashOperationDto)
+                                            .retrieve()
+                                            .onStatus(HttpStatusCode::isError,
+                                                    resp -> resp.bodyToMono(String.class)
+                                                            .flatMap(body -> Mono.error(new RuntimeException(body))))
+                                            .toBodilessEntity()
+                                            .map(r -> {
+                                                session.getAttributes().put("successCashMessage", "Операция успешно выполнена");
+                                                return "redirect:/main";
+                                            })
+                                            .onErrorResume(ex -> {
+                                                session.getAttributes().put("cashErrors", List.of(ex.getMessage()));
+                                                return Mono.just("redirect:/main");
+                                            });
+                                })
+                )
+                .onErrorResume(ex -> {
+                    session.getAttributes().put("cashErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
+                    return Mono.just("redirect:/main");
+                });
+    }
+
     private Mono<Long> checkUserId(WebSession session) {
         Object userIdObj = session.getAttribute("userId");
         if (!(userIdObj instanceof Number)) {
@@ -222,10 +270,14 @@ public class MainController {
         model.addAttribute("passwordErrors", session.getAttribute("passwordErrors"));
         model.addAttribute("successUpdateAccMessage", session.getAttribute("successUpdateAccMessage"));
         model.addAttribute("accountErrors", session.getAttribute("accountErrors"));
+        model.addAttribute("successCashMessage", session.getAttribute("successCashMessage"));
+        model.addAttribute("cashErrors", session.getAttribute("cashErrors"));
 
         session.getAttributes().remove("successPasswordMessage");
         session.getAttributes().remove("passwordErrors");
         session.getAttributes().remove("successUpdateAccMessage");
         session.getAttributes().remove("accountErrors");
+        session.getAttributes().remove("successCashMessage");
+        session.getAttributes().remove("cashErrors");
     }
 }

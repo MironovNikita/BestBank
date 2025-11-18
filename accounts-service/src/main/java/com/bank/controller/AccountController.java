@@ -1,9 +1,11 @@
 package com.bank.controller;
 
-import com.bank.dto.AccountMainPageDto;
-import com.bank.dto.AccountPasswordChangeDto;
-import com.bank.dto.AccountUpdateDto;
-import com.bank.dto.RegisterAccountRequest;
+import com.bank.dto.account.AccountMainPageDto;
+import com.bank.dto.account.AccountPasswordChangeDto;
+import com.bank.dto.account.AccountUpdateDto;
+import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.cash.BalanceDto;
+import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
 import com.bank.service.AccountServiceImpl;
@@ -44,5 +46,15 @@ public class AccountController {
     @PostMapping("/login")
     public Mono<LoginResponse> login(@Validated @RequestBody LoginRequest loginRequest) {
         return accountService.login(loginRequest);
+    }
+
+    @GetMapping("/{id}/balance")
+    public Mono<BalanceDto> getBalance(@PathVariable(name = "id") Long accountId) {
+        return accountService.getBalance(accountId);
+    }
+
+    @PostMapping("/{id}/balance")
+    public Mono<Void> editBalance(@PathVariable(name = "id") Long accountId, @Validated @RequestBody UpdateBalanceRq updateBalanceRq) {
+        return accountService.updateBalance(accountId, updateBalanceRq);
     }
 }

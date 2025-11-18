@@ -8,38 +8,26 @@
     <changeSet id="accounts" author="MironovNikita">
         <preConditions onFail="WARN">
             <not>
-                <tableExists tableName="accounts"/>
+                <tableExists tableName="cash"/>
             </not>
         </preConditions>
 
-        <createTable tableName="accounts">
+        <createTable tableName="cash">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="email" type="varchar(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-            <column name="password" type="varchar(255)">
+            <column name="account_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="name" type="varchar(150)">
+            <column name="operation" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="surname" type="varchar(150)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="birthdate" type="date">
-                <constraints nullable="false"/>
-            </column>
-            <column name="phone" type="varchar(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-            <column name="balance" type="bigint">
+            <column name="amount" type="bigint">
                 <constraints nullable="false"/>
             </column>
         </createTable>
         <rollback>
-            <dropTable tableName="accounts"/>
+            <dropTable tableName="cash"/>
         </rollback>
     </changeSet>
 </databaseChangeLog>
