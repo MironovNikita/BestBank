@@ -2,6 +2,7 @@ package com.bank.controller;
 
 import com.bank.dto.AccountMainPageDto;
 import com.bank.dto.AccountPasswordChangeDto;
+import com.bank.dto.AccountUpdateDto;
 import com.bank.dto.RegisterAccountRequest;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
@@ -126,10 +127,7 @@ public class MainController {
 
     @GetMapping("/main")
     public Mono<String> mainPage(WebSession session, Model model) {
-        model.addAttribute("successPasswordMessage", session.getAttribute("successPasswordMessage"));
-        model.addAttribute("passwordErrors", session.getAttribute("passwordErrors"));
-        session.getAttributes().remove("successPasswordMessage");
-        session.getAttributes().remove("passwordErrors");
+        handleMainPage(session, model);
 
         return checkUserId(session)
                 .flatMap(userId ->
@@ -180,11 +178,54 @@ public class MainController {
                 });
     }
 
+    @PostMapping("/editAccount")
+    public Mono<String> editAccount(@ModelAttribute AccountUpdateDto accountUpdateDto, WebSession session) {
+
+        return checkUserId(session)
+                .flatMap(userId -> accountsWebClient
+                        .post()
+                        .uri("/accounts/{id}/editAccount", userId)
+                        .bodyValue(accountUpdateDto)
+                        .retrieve()
+                        .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(new RuntimeException(body))))
+                        .toBodilessEntity()
+                        .map(response -> {
+                            session.getAttributes().put("successUpdateAccMessage", "Аккаунт был успешно обновлён");
+                            return "redirect:/main";
+                        })
+                        .onErrorResume(WebClientResponseException.class, ex -> {
+                            session.getAttributes().put("accountErrors", List.of(ex.getResponseBodyAsString()));
+                            return Mono.just("redirect:/main");
+                        })
+                        .onErrorResume(Exception.class, ex -> {
+                            session.getAttributes().put("accountErrors", List.of(ex.getMessage()));
+                            return Mono.just("redirect:/main");
+                        })
+                )
+                .onErrorResume(ex -> {
+                    session.getAttributes().put("accountErrors", List.of(ex.getMessage()));
+                    return Mono.just("redirect:/main");
+                });
+    }
+
     private Mono<Long> checkUserId(WebSession session) {
         Object userIdObj = session.getAttribute("userId");
         if (!(userIdObj instanceof Number)) {
             return Mono.error(new RuntimeException("Пользователь не авторизован, либо в сессии указан некорректный ID."));
         }
         return Mono.just(((Number) userIdObj).longValue());
+    }
+
+    private void handleMainPage(WebSession session, Model model) {
+        model.addAttribute("successPasswordMessage", session.getAttribute("successPasswordMessage"));
+        model.addAttribute("passwordErrors", session.getAttribute("passwordErrors"));
+        model.addAttribute("successUpdateAccMessage", session.getAttribute("successUpdateAccMessage"));
+        model.addAttribute("accountErrors", session.getAttribute("accountErrors"));
+
+        session.getAttributes().remove("successPasswordMessage");
+        session.getAttributes().remove("passwordErrors");
+        session.getAttributes().remove("successUpdateAccMessage");
+        session.getAttributes().remove("accountErrors");
     }
 }

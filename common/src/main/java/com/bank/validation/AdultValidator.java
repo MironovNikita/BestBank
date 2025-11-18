@@ -11,7 +11,7 @@ public class AdultValidator implements ConstraintValidator<Adult, LocalDate> {
 
     @Override
     public boolean isValid(LocalDate birthdate, ConstraintValidatorContext context) {
-        if (birthdate == null) return false;
+        if (birthdate == null) return true;
         return Period.between(birthdate, LocalDate.now()).getYears() >= ADULT_AGE;
     }
 }

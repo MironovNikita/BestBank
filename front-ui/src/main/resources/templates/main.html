@@ -39,17 +39,34 @@
             </table>
         </form>
     </td>
-    <tr><td style="padding:2px;">
-        <form method="post" th:action="${'/user/'+login+'/editUserAccount'}">
+    <tr><tr style="padding:2px;">
+        <form method="post" th:action="@{'/editAccount'}">
         <table style="width:100%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
-            <tr th:if="${userAccountErrors!=null}" th:each="userAccountError : ${userAccountErrors}">
-                <td style="color:red;" th:text="${userAccountError}"/>
+            <tr>
+                <td>
+                    <p style="color:red;" th:if="${accountErrors != null}" th:each="accountError : ${accountErrors}" th:text="${accountError}"></p>
+                    <p style="color:green;" th:if="${successUpdateAccMessage != null}" th:text="${successUpdateAccMessage}"></p>
+                </td>
             </tr>
             <tr>
-                <td style="font-weight:bold;">Фамилия Имя</td>
+                <td style="font-weight:bold;">Email</td>
+                <td th:text="${email}"/>
+                <td>
+                    <input name="email" type="text" style="width:100%"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight:bold;">Имя</td>
                 <td th:text="${name}"/>
                 <td>
                     <input name="name" type="text" style="width:100%"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight:bold;">Фамилия</td>
+                <td th:text="${surname}"/>
+                <td>
+                    <input name="surname" type="text" style="width:100%"/>
                 </td>
             </tr>
             <tr>
@@ -57,6 +74,13 @@
                 <td th:text="${birthdate}"/>
                 <td>
                     <input name="birthdate" type="date" style="width:100%"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight:bold;">Номер телефона</td>
+                <td th:text="${phone}"/>
+                <td>
+                    <input name="phone" type="text" style="width:100%"/>
                 </td>
             </tr>
             <tr>

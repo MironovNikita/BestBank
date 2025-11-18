@@ -2,8 +2,8 @@ package com.bank.controller;
 
 import com.bank.dto.AccountMainPageDto;
 import com.bank.dto.AccountPasswordChangeDto;
+import com.bank.dto.AccountUpdateDto;
 import com.bank.dto.RegisterAccountRequest;
-import com.bank.entity.AccountUpdateDto;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
 import com.bank.service.AccountServiceImpl;

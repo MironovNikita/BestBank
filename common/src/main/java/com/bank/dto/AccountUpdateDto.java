@@ -1,4 +1,4 @@
-package com.bank.entity;
+package com.bank.dto;
 
 import com.bank.validation.Adult;
 import com.bank.validation.Phone;
@@ -28,4 +28,24 @@ public class AccountUpdateDto {
     @Phone
     @Size(min = 11, max = 11, message = "Размер номера телефона должен составлять 11 символов")
     private String phone;
+
+    public void setEmail(String email) {
+        this.email = normalize(email);
+    }
+
+    public void setName(String name) {
+        this.name = normalize(name);
+    }
+
+    public void setSurname(String surname) {
+        this.surname = normalize(surname);
+    }
+
+    public void setPhone(String phone) {
+        this.phone = normalize(phone);
+    }
+
+    private String normalize(String value) {
+        return (value == null || value.isBlank()) ? null : value;
+    }
 }
