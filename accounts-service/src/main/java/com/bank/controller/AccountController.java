@@ -6,6 +6,7 @@ import com.bank.dto.account.AccountUpdateDto;
 import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
+import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
 import com.bank.service.AccountServiceImpl;
@@ -56,5 +57,10 @@ public class AccountController {
     @PostMapping("/{id}/balance")
     public Mono<Void> editBalance(@PathVariable(name = "id") Long accountId, @Validated @RequestBody UpdateBalanceRq updateBalanceRq) {
         return accountService.updateBalance(accountId, updateBalanceRq);
+    }
+
+    @PostMapping("/transfer")
+    public Mono<Void> transfer(@Validated @RequestBody TransferOperationDto transferOperationDto) {
+        return accountService.transfer(transferOperationDto);
     }
 }

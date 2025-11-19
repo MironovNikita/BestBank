@@ -24,5 +24,8 @@ public class WebClientConfig {
         return loadBalancedWebClientBuilder().clone().baseUrl("lb://cash-service").build();
     }
 
-
+    @Bean
+    public WebClient transfersWebClient() {
+        return loadBalancedWebClientBuilder().clone().baseUrl("lb://transfers-service").build();
+    }
 }

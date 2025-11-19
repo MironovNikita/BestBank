@@ -6,13 +6,14 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
-@Table("cash")
-public class CashOperation {
+@Table("transfers")
+public class TransferOperation {
 
     @Id
     private Long id;
-    @Column("account_id")
-    private Long accountId;
-    private OperationType operation;
+    @Column("account_id_from")
+    private Long accountIdFrom;
+    @Column("account_id_to")
+    private Long accountIdTo;
     private Long amount;
 }

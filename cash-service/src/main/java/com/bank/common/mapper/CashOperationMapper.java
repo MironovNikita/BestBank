@@ -1,6 +1,6 @@
 package com.bank.common.mapper;
 
-import com.bank.common.OperationType;
+import com.bank.entity.OperationType;
 import com.bank.dto.cash.CashOperationDto;
 import com.bank.entity.CashOperation;
 import org.springframework.stereotype.Component;

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="accounts" author="MironovNikita">
+        <preConditions onFail="WARN">
+            <not>
+                <tableExists tableName="transfers"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="transfers">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_id_from" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id_to" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="transfers"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

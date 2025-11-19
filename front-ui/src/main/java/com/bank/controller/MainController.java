@@ -6,6 +6,7 @@ import com.bank.dto.account.AccountUpdateDto;
 import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.CashOperationDto;
+import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
 import com.bank.security.CustomUserDetails;
@@ -37,6 +38,7 @@ public class MainController {
 
     private final WebClient accountsWebClient;
     private final WebClient cashWebClient;
+    private final WebClient transfersWebClient;
     private final ReactiveAuthenticationManager authenticationManager;
     private final ServerSecurityContextRepository securityContextRepository;
 
@@ -215,8 +217,7 @@ public class MainController {
     }
 
     @PostMapping("/cash")
-    public Mono<String> operateCash(ServerWebExchange exchange,
-                                    WebSession session) {
+    public Mono<String> operateCash(ServerWebExchange exchange, WebSession session) {
 
         return checkUserId(session)
                 .flatMap(userId ->
@@ -267,6 +268,57 @@ public class MainController {
                 });
     }
 
+    @PostMapping("/transfer")
+    public Mono<String> transfer(ServerWebExchange exchange, WebSession session) {
+        return checkUserId(session)
+                .flatMap(userId ->
+                        exchange.getFormData()
+                                .flatMap(form -> {
+                                    String transferValue = form.getFirst("transferValue");
+                                    String accountIdTo = form.getFirst("accountTo");
+
+                                    if (transferValue == null || accountIdTo == null) {
+                                        session.getAttributes().put("transferErrors", List.of("Поля формы перевода заполнены неверно!"));
+                                        return Mono.just("redirect:/main");
+                                    }
+
+                                    Long amount;
+                                    Long accountTo;
+                                    try {
+                                        accountTo = Long.valueOf(accountIdTo);
+                                        amount = Long.valueOf(transferValue);
+                                    } catch (NumberFormatException e) {
+                                        session.getAttributes().put("transferErrors", List.of("Некорректная сумма!"));
+                                        return Mono.just("redirect:/main");
+                                    }
+
+                                    TransferOperationDto transferOperationDto = new TransferOperationDto(userId, accountTo, amount);
+
+                                    return transfersWebClient
+                                            .post()
+                                            .uri("/transfer")
+                                            .bodyValue(transferOperationDto)
+                                            .retrieve()
+                                            .onStatus(HttpStatusCode::isError,
+                                                    resp -> resp.bodyToMono(String.class)
+                                                            .flatMap(body -> Mono.error(new RuntimeException(body))))
+                                            .toBodilessEntity()
+                                            .map(r -> {
+                                                session.getAttributes().put("successTransferMessage", "Операция перевода успешно выполнена");
+                                                return "redirect:/main";
+                                            })
+                                            .onErrorResume(ex -> {
+                                                session.getAttributes().put("transferErrors", List.of(ex.getMessage()));
+                                                return Mono.just("redirect:/main");
+                                            });
+                                })
+                )
+                .onErrorResume(ex -> {
+                    session.getAttributes().put("transferErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
+                    return Mono.just("redirect:/main");
+                });
+    }
+
     private Mono<Long> checkUserId(WebSession session) {
         Object userIdObj = session.getAttribute("userId");
         if (!(userIdObj instanceof Number)) {
@@ -282,6 +334,8 @@ public class MainController {
         model.addAttribute("accountErrors", session.getAttribute("accountErrors"));
         model.addAttribute("successCashMessage", session.getAttribute("successCashMessage"));
         model.addAttribute("cashErrors", session.getAttribute("cashErrors"));
+        model.addAttribute("successTransferMessage", session.getAttribute("successTransferMessage"));
+        model.addAttribute("transferErrors", session.getAttribute("transferErrors"));
 
         session.getAttributes().remove("successPasswordMessage");
         session.getAttributes().remove("passwordErrors");
@@ -289,5 +343,7 @@ public class MainController {
         session.getAttributes().remove("accountErrors");
         session.getAttributes().remove("successCashMessage");
         session.getAttributes().remove("cashErrors");
+        session.getAttributes().remove("successTransferMessage");
+        session.getAttributes().remove("transferErrors");
     }
 }

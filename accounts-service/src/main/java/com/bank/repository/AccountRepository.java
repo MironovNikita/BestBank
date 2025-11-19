@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface AccountRepository extends R2dbcRepository<Account, Long> {
+public interface AccountRepository extends R2dbcRepository<Account, Long>, AccountRepositoryCustom {
 
     @Query("""
             SELECT * from accounts a

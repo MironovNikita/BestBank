@@ -1,4 +1,4 @@
-package com.bank.common;
+package com.bank.entity;
 
 public enum OperationType {
     GET,

@@ -70,6 +70,14 @@ public class GlobalExceptionHandler {
         return Mono.just(e.getMessage());
     }
 
+    @ExceptionHandler(TransferException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<String> handleTransferException(TransferException e) {
+        log.error("Возникло TransferException: {}", e.getMessage(), e);
+
+        return Mono.just(e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Mono<String> handleException(Exception e) {

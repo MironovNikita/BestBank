@@ -14,14 +14,6 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NotEnoughFundsException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Mono<String> handleNotEnoughFundsException(NotEnoughFundsException e) {
-        log.error("Возникло NotEnoughFundsException: {}", e.getMessage(), e);
-
-        return Mono.just(e.getMessage());
-    }
-
     @ExceptionHandler(WebExchangeBindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Mono<String> handleConstraintViolationException(WebExchangeBindException e) {
@@ -37,10 +29,19 @@ public class GlobalExceptionHandler {
         return Mono.just(fieldErrors);
     }
 
+    @ExceptionHandler(TransferException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<String> handleTransferException(TransferException e) {
+        log.error("Возникло TransferException: {}", e.getMessage(), e);
+
+        return Mono.just(e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Mono<String> handleException(Exception e) {
         log.error("Возникло необработанное исключение: {}", e.getMessage());
+
         return Mono.just("Произошла непредвиденная ошибка. Попробуйте позднее.");
     }
 }

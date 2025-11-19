@@ -15,8 +15,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import static com.bank.common.OperationType.GET;
-import static com.bank.common.OperationType.PUT;
+import static com.bank.entity.OperationType.GET;
+import static com.bank.entity.OperationType.PUT;
 
 @Slf4j
 @Service
@@ -35,8 +35,7 @@ public class CashServiceImpl {
                 .flatMap(balance -> calculateNewBalance(balance, cashOperation))
                 .flatMap(newBalance -> updateRemoteBalance(newBalance, cashOperationDto.getAccountId())
                         .then(saveOperation(cashOperation)))
-                .doOnSuccess(v -> log.info("Операция с наличными для пользователя {} выполнена.",
-                        cashOperation.getAccountId()))
+                .doOnSuccess(v -> log.info("Операция с наличными для пользователя {} выполнена.", cashOperation.getAccountId()))
                 .then();
     }
 

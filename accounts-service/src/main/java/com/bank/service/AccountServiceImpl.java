@@ -11,6 +11,7 @@ import com.bank.dto.account.AccountUpdateDto;
 import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
+import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.Account;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
@@ -134,6 +135,11 @@ public class AccountServiceImpl {
     public Mono<Void> updateBalance(Long accountId, UpdateBalanceRq updateBalanceRq) {
         return accountRepository.updateAccountBalance(accountId, updateBalanceRq.getBalance())
                 .doOnSuccess(v -> log.info("Баланс для аккаунта с ID {} был успешно изменён", accountId));
+    }
+
+    @Transactional
+    public Mono<Void> transfer(TransferOperationDto transferOperationDto) {
+        return accountRepository.transfer(transferOperationDto);
     }
 
     private boolean checkField(String field) {
