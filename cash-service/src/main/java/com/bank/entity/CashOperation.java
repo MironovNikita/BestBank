@@ -1,5 +1,6 @@
 package com.bank.entity;
 
+import com.bank.common.OperationType;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -13,7 +14,6 @@ public class CashOperation {
     private Long id;
     @Column("account_id")
     private Long accountId;
-    //TODO Попробовать OperationType сделать в БД
-    private String operation;
+    private OperationType operation;
     private Long amount;
 }

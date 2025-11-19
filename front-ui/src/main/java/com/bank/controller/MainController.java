@@ -4,6 +4,7 @@ import com.bank.dto.account.AccountMainPageDto;
 import com.bank.dto.account.AccountPasswordChangeDto;
 import com.bank.dto.account.AccountUpdateDto;
 import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.CashOperationDto;
 import com.bank.login.LoginRequest;
 import com.bank.login.LoginResponse;
@@ -134,11 +135,20 @@ public class MainController {
                                         .flatMap(body -> Mono.error(new RuntimeException(body))))
                                 .bodyToFlux(AccountMainPageDto.class)
                                 .collectList()
-                                .flatMap(accountList -> {
-                                    model.addAttribute("accounts", accountList);
-                                    model.addAttribute("userName", session.getAttribute("userName"));
-                                    return Mono.just("main");
-                                })
+                                .flatMap(accountList ->
+                                        accountsWebClient
+                                                .get()
+                                                .uri("/accounts/{id}/balance", userId)
+                                                .retrieve()
+                                                .bodyToMono(BalanceDto.class)
+                                                .map(BalanceDto::getBalance)
+                                                .flatMap(balance -> {
+                                                    model.addAttribute("accounts", accountList);
+                                                    model.addAttribute("userName", session.getAttribute("userName"));
+                                                    model.addAttribute("balance", balance);
+                                                    return Mono.just("main");
+                                                })
+                                )
                 );
     }
 

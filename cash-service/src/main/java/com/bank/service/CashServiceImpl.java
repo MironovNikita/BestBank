@@ -15,6 +15,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import static com.bank.common.OperationType.GET;
+import static com.bank.common.OperationType.PUT;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -53,12 +56,12 @@ public class CashServiceImpl {
     private Mono<Long> calculateNewBalance(Long currentBalance, CashOperation cashOperation) {
         long amount = cashOperation.getAmount();
 
-        if (cashOperation.getOperation().equals("GET")) {
+        if (cashOperation.getOperation() == GET) {
             if (amount > currentBalance) {
                 return Mono.error(new NotEnoughFundsException(currentBalance));
             }
             return Mono.just(currentBalance - amount);
-        } else if (cashOperation.getOperation().equals("PUT")) {
+        } else if (cashOperation.getOperation() == PUT) {
             return Mono.just(currentBalance + amount);
         } else {
             return Mono.error(new RuntimeException("Неизвестный тип операции"));
