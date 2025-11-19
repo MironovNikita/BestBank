@@ -11,10 +11,11 @@ import com.bank.dto.account.AccountUpdateDto;
 import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
+import com.bank.dto.email.EmailNotificationDto;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.Account;
-import com.bank.login.LoginRequest;
-import com.bank.login.LoginResponse;
+import com.bank.dto.login.LoginRequest;
+import com.bank.dto.login.LoginResponse;
 import com.bank.repository.AccountRepository;
 import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;
@@ -23,28 +24,41 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import static com.bank.dto.email.EmailTemplates.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AccountServiceImpl {
+public class AccountServiceImpl implements AccountService {
 
-    //TODO ЛОГИ
-
+    private final WebClient notificationsWebClient;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
     private final SecureBase64Converter converter;
 
+    @Override
     @Transactional
     public Mono<Void> register(RegisterAccountRequest req) {
         Account account = accountMapper.toAccount(req);
 
         return accountRepository.save(account)
-                .doOnSuccess(acc -> log.info("Успешное создание аккаунта с ID: {}", acc.getId()))
+                .flatMap(acc -> {
+                    log.info("Успешное создание аккаунта с ID: {}", acc.getId());
+
+                    sendNotification(req.getEmail(), REGISTRATION_SUBJECT, REGISTRATION_TEXT.formatted(acc.getName(), acc.getSurname()))
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .doOnError(ex -> logEmailError(req.getEmail(), ex.getMessage()))
+                            .subscribe();
+
+                    return Mono.just(acc);
+                })
                 .onErrorResume(ex -> {
                     if (ex instanceof DataIntegrityViolationException) {
                         log.error("При регистрации пользователя с email {} указаны уже существующие параметры: {}", req.getEmail(), ex.getMessage());
@@ -56,10 +70,12 @@ public class AccountServiceImpl {
                 .then();
     }
 
+    @Override
     public Flux<AccountMainPageDto> getAllAccounts(Long requestedId) {
         return accountRepository.getAllAccountsForMainPage(requestedId);
     }
 
+    @Override
     @Transactional
     public Mono<Void> editPassword(Long id, AccountPasswordChangeDto passwordChangeDto) {
         String newPassword = passwordChangeDto.getNewPassword();
@@ -78,6 +94,13 @@ public class AccountServiceImpl {
                 .flatMap(account -> {
                     if (passwordEncoder.matches(newPassword, account.getPassword())) return Mono.error(new PasswordEditException());
                     account.setPassword(passwordEncoder.encode(newPassword));
+
+                    String email = converter.decrypt(account.getEmail());
+                    sendNotification(email, PASSWORD_CHANGE_SUBJECT, PASSWORD_CHANGE_TEXT)
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .doOnError(ex -> logEmailError(email, ex.getMessage()))
+                            .subscribe();
+
                     return accountRepository.save(account)
                             .doOnSuccess(saved -> log.info("Пароль для пользователя с ID {} успешно обновлён.", saved.getId()));
                 })
@@ -85,6 +108,7 @@ public class AccountServiceImpl {
                 .then();
     }
 
+    @Override
     @Transactional
     public Mono<Void> editAccount(Long id, AccountUpdateDto accountUpdateDto) {
 
@@ -99,6 +123,16 @@ public class AccountServiceImpl {
                     if (checkField(accountUpdateDto.getSurname())) account.setSurname(accountUpdateDto.getSurname());
                     if (checkField(accountUpdateDto.getPhone())) account.setPhone(accountUpdateDto.getPhone());
                     if (accountUpdateDto.getBirthdate() != null) account.setBirthdate(accountUpdateDto.getBirthdate());
+
+                    String email =
+                            (accountUpdateDto.getEmail() != null && !accountUpdateDto.getEmail().isBlank())
+                                    ? accountUpdateDto.getEmail()
+                                    : converter.decrypt(account.getEmail());
+                    sendNotification(email, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .doOnError(ex -> logEmailError(email, ex.getMessage()))
+                            .subscribe();
+
                     return accountRepository.save(account)
                             .doOnSuccess(saved -> log.info("Данные пользователя с ID {} были успешно обновлены.", saved.getId()));
                 })
@@ -106,6 +140,7 @@ public class AccountServiceImpl {
                 .then();
     }
 
+    @Override
     public Mono<LoginResponse> login(LoginRequest loginRequest) {
         return accountRepository.getAccountByEmail(converter.encrypt(loginRequest.getEmail().toLowerCase()))
                 .switchIfEmpty(Mono.defer(() -> {
@@ -123,6 +158,7 @@ public class AccountServiceImpl {
                 });
     }
 
+    @Override
     public Mono<BalanceDto> getBalance(Long accountId) {
         return accountRepository.getAccountBalance(accountId)
                 .flatMap(balance -> {
@@ -131,19 +167,39 @@ public class AccountServiceImpl {
                 });
     }
 
+    @Override
     @Transactional
     public Mono<Void> updateBalance(Long accountId, UpdateBalanceRq updateBalanceRq) {
         return accountRepository.updateAccountBalance(accountId, updateBalanceRq.getBalance())
                 .doOnSuccess(v -> log.info("Баланс для аккаунта с ID {} был успешно изменён", accountId));
     }
 
+    @Override
     @Transactional
     public Mono<Void> transfer(TransferOperationDto transferOperationDto) {
-        return accountRepository.transfer(transferOperationDto);
+        return accountRepository.transfer(transferOperationDto)
+                .doOnSuccess(v -> log.info("Перевод с аккаунта с ID {} на аккаунт с ID {} успешно совершён.",
+                        transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo()));
     }
 
     private boolean checkField(String field) {
         return field != null && !field.isEmpty();
+    }
+
+    private Mono<Void> sendNotification(String toEmail, String subject, String text) {
+        EmailNotificationDto email = new EmailNotificationDto(toEmail, subject, text);
+
+        return notificationsWebClient
+                .post()
+                .uri("/email")
+                .bodyValue(email)
+                .retrieve()
+                .toBodilessEntity()
+                .then();
+    }
+
+    private void logEmailError(String email, String exceptionMessage) {
+        log.error("Ошибка при отправке уведомления для {}: {}", email, exceptionMessage);
     }
 }
 

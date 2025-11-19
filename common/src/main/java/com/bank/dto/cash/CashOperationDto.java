@@ -17,6 +17,9 @@ public class CashOperationDto {
     @NotBlank(message = "Тип операции обязательно должен быть указан")
     private String operation;
 
+    @NotBlank(message = "Email обязательно должен быть указан")
+    private String email;
+
     @Positive(message = "Сумма не может быть отрицательной или 0")
     @NotNull(message = "Сумма не может быть пустой")
     private Long amount;

@@ -7,9 +7,9 @@ import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.dto.transfer.TransferOperationDto;
-import com.bank.login.LoginRequest;
-import com.bank.login.LoginResponse;
-import com.bank.service.AccountServiceImpl;
+import com.bank.dto.login.LoginRequest;
+import com.bank.dto.login.LoginResponse;
+import com.bank.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +21,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AccountController {
 
-    //TODO Заменить на интерфейс
-    private final AccountServiceImpl accountService;
+    private final AccountService accountService;
 
     @PostMapping("/register")
     public Mono<Void> register(@RequestBody @Validated RegisterAccountRequest registerRequest) {

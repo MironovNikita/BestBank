@@ -7,15 +7,20 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class WebClientConfig {
+
     @Bean
     @LoadBalanced
-    public WebClient.Builder accountsWebClientBuilder() {
-        return WebClient.builder()
-                .baseUrl("lb://accounts-service");
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
     }
 
     @Bean
     public WebClient accountsWebClient() {
-        return accountsWebClientBuilder().build();
+        return webClientBuilder().baseUrl("lb://accounts-service").build();
+    }
+
+    @Bean
+    public WebClient notificationsWebClient() {
+        return webClientBuilder().baseUrl("lb://notification-service").build();
     }
 }

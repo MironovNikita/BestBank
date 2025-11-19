@@ -10,17 +10,13 @@ public class WebClientConfig {
 
     @Bean
     @LoadBalanced
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
-
-    @Bean
-    public WebClient accountsWebClient() {
-        return webClientBuilder().baseUrl("lb://accounts-service").build();
+    public WebClient.Builder notificationsWebClientBuilder() {
+        return WebClient.builder()
+                .baseUrl("lb://notification-service");
     }
 
     @Bean
     public WebClient notificationsWebClient() {
-        return webClientBuilder().baseUrl("lb://notification-service").build();
+        return notificationsWebClientBuilder().build();
     }
 }

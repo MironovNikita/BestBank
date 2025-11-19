@@ -1,7 +1,7 @@
 package com.bank.controller;
 
 import com.bank.dto.cash.CashOperationDto;
-import com.bank.service.CashServiceImpl;
+import com.bank.service.CashService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,8 +15,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CashController {
 
-    //TODO Заменить на интерфейс
-    private final CashServiceImpl cashService;
+    private final CashService cashService;
 
     @PostMapping
     public Mono<Void> operateCash(@RequestBody @Validated CashOperationDto cashOperation) {

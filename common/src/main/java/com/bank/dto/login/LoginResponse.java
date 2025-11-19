@@ -1,4 +1,4 @@
-package com.bank.login;
+package com.bank.dto.login;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

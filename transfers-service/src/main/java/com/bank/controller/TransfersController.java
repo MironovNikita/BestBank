@@ -1,7 +1,7 @@
 package com.bank.controller;
 
 import com.bank.dto.transfer.TransferOperationDto;
-import com.bank.service.TransfersServiceImpl;
+import com.bank.service.TransfersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,8 +15,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class TransfersController {
 
-    //TODO Заменить на интерфейс
-    private final TransfersServiceImpl transfersService;
+    private final TransfersService transfersService;
 
     @PostMapping
     public Mono<Void> operateTransfer(@Validated @RequestBody TransferOperationDto transfersOperation) {
