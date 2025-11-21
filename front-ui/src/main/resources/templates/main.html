@@ -1,148 +1,261 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Лучший Банк</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .container {
+            width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 25px 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h2 {
+            margin: 0 0 15px 0;
+            font-weight: 600;
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-group label {
+            width: 120px;
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .form-group input,
+        .form-group select {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 6px rgba(99,102,241,0.25);
+            outline: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #6366f1, #4f46e5);
+            color: #fff;
+            transition: background 0.25s, transform 0.2s;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #4f46e5, #4338ca);
+            transform: translateY(-1px);
+        }
+
+        .message {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .success {
+            color: #16a34a;
+            font-size: 17px;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 17px;
+        }
+
+        .logout-form {
+            align-self: flex-end;
+        }
+
+        .logout-form button {
+            background: none;
+            border: none;
+            padding: 0;
+            font-weight: bold;
+            color: #6366f1;
+            cursor: pointer;
+        }
+
+        .logout-form button:hover {
+            color: #4f46e5;
+        }
+
+        .welcome {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+    </style>
 </head>
-
 <body>
-<br>
-<form th:action="@{/logout}" method="post" style="float:right;">
-    <button type="submit" style="background:none; border:none; padding:0; font-weight:bold; cursor:pointer;">
-        ВЫЙТИ &cudarrr;
-    </button>
-</form>
-<table style="width:70%;margin-left:auto;margin-right:auto;">
-    <tr><td style="padding:2px;">
-        <form method="post" th:action="@{'/editPassword'}" oninput="submitBtn.disabled = newPassword.value !== confirmPassword.value">
-            <table style="width:100%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
-                <tr>
-                    <td colspan="3" th:text="'Добро пожаловать, ' + ${session.userName} + '!'" style="font-weight:bold;"></td>
-                    <td colspan="3" th:text="'Текущий баланс: ' + ${balance} + ' руб.'" style="font-weight:bold;"></td>
-                </tr>
-                <tr>
-                    <td style="font-weight:bold;">Изменить пароль</td>
-                    <td>
-                        <p style="color:red;" th:if="${passwordErrors != null}" th:each="passwordError : ${passwordErrors}" th:text="${passwordError}"></p>
-                        <p style="color:green;" th:if="${successPasswordMessage != null}" th:text="${successPasswordMessage}"></p>
-                        <p>
-                            Пароль: <input id="newPassword" name="newPassword" type="password" required/>
-                        </p>
-                        <p>
-                            Повторите пароль: <input id="confirmPassword" name="confirmPassword" type="password" required/>
-                        </p>
-                    </td>
-                    <td style="text-align:right">
-                        <button id="submitBtn" disabled>Изменить пароль</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </td>
-    <tr><tr style="padding:2px;">
-        <form method="post" th:action="@{'/editAccount'}">
-        <table style="width:100%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
-            <tr>
-                <td>
-                    <p style="color:red;" th:if="${accountErrors != null}" th:each="accountError : ${accountErrors}" th:text="${accountError}"></p>
-                    <p style="color:green;" th:if="${successUpdateAccMessage != null}" th:text="${successUpdateAccMessage}"></p>
-                </td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold;">Email</td>
-                <td th:text="${email}"/>
-                <td>
-                    <input name="email" type="text" style="width:100%"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold;">Имя</td>
-                <td th:text="${name}"/>
-                <td>
-                    <input name="name" type="text" style="width:100%"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold;">Фамилия</td>
-                <td th:text="${surname}"/>
-                <td>
-                    <input name="surname" type="text" style="width:100%"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold;">Дата рождения</td>
-                <td th:text="${birthdate}"/>
-                <td>
-                    <input name="birthdate" type="date" style="width:100%"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold;">Номер телефона</td>
-                <td th:text="${phone}"/>
-                <td>
-                    <input name="phone" type="text" style="width:100%"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align:right" colspan="3">
-                    <button>Сохранить изменения</button>
-                </td>
-            </tr>
-        </table>
-        </form>
-    </td></tr>
-    <tr><td style="padding:2px;">
-        <form method="post" th:action="@{'/cash'}">
-            <table style="width:100%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
-                <tr>
-                    <td>
-                        <p style="color:red;" th:if="${cashErrors != null}" th:each="cashError : ${cashErrors}" th:text="${cashError}"></p>
-                        <p style="color:green;" th:if="${successCashMessage != null}" th:text="${successCashMessage}"></p>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="font-weight:bold;">Наличные</td>
-                    <td>
-                        <input name="amount" type="number" style="width:100%" required/>
-                    </td>
-                    <td>
-                    <td style="text-align:right">
-                        <button name="action" value="PUT">Положить</button>
-                        <button name="action" value="GET">Снять</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </td></tr>
-    <tr><td style="padding:2px;">
-        <form method="post" th:action="@{'/transfer'}">
-            <table style="width:100%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
-                <tr>
-                    <td>
-                        <p style="color:red;" th:if="${transferErrors != null}" th:each="transferError : ${transferErrors}" th:text="${transferError}"></p>
-                        <p style="color:green;" th:if="${successTransferMessage != null}" th:text="${successTransferMessage}"></p>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="font-weight:bold;">Перевод</td>
-                    <td>
-                        <input name="transferValue" type="number" required/>
-                    </td>
-                    <td>
-                        Кому
-                        <select name="accountTo">
-                            <option th:each="account : ${accounts}" th:value="${account.getId()}" th:text="${account.getName()} + ' ' + ${account.getSurname()} + ' Тел.: ' + ${account.getPhone()}"/>
-                        </select>
-                    </td>
-                    <td style="text-align:right">
-                        <button>Перевести</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </td></tr>
-</table>
-</body>
+<div class="container">
 
+    <!-- Выйти -->
+    <form th:action="@{/logout}" method="post" class="logout-form">
+        <button type="submit">ВЫЙТИ &cudarrr;</button>
+    </form>
+
+    <!-- Информация о пользователе и смена пароля -->
+    <div class="card">
+        <div class="welcome">
+            <span th:text="'Добро пожаловать, ' + ${session.userName} + '!'"></span>
+            <span th:text="'Текущий баланс: ' + ${balance} + ' руб.'"></span>
+        </div>
+
+        <h2>Изменить пароль</h2>
+        <form method="post" th:action="@{'/editPassword'}" oninput="submitBtn.disabled = newPassword.value !== confirmPassword.value">
+            <div class="message">
+                <p style="color:red;" th:if="${passwordErrors != null}" th:each="passwordError : ${passwordErrors}" th:text="${passwordError}"></p>
+                <p style="color:green;" th:if="${successPasswordMessage != null}" th:text="${successPasswordMessage}"></p>
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input id="newPassword" name="newPassword" type="password" required/>
+            </div>
+            <div class="form-group">
+                <label>Повторите пароль</label>
+                <input id="confirmPassword" name="confirmPassword" type="password" required/>
+            </div>
+            <div class="button-group">
+                <button id="submitBtn" disabled>Изменить пароль</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Редактирование аккаунта -->
+    <div class="card">
+        <h2>Редактировать аккаунт</h2>
+        <div class="message">
+            <p style="color:red;" th:if="${accountErrors != null}" th:each="accountError : ${accountErrors}" th:text="${accountError}"></p>
+            <p style="color:green;" th:if="${successUpdateAccMessage != null}" th:text="${successUpdateAccMessage}"></p>
+        </div>
+        <form method="post" th:action="@{'/editAccount'}">
+            <div class="form-group">
+                <label>Email</label>
+                <span th:text="${email}"></span>
+                <input name="email" type="text"/>
+            </div>
+            <div class="form-group">
+                <label>Имя</label>
+                <span th:text="${name}"></span>
+                <input name="name" type="text"/>
+            </div>
+            <div class="form-group">
+                <label>Фамилия</label>
+                <span th:text="${surname}"></span>
+                <input name="surname" type="text"/>
+            </div>
+            <div class="form-group">
+                <label>Дата рождения</label>
+                <span th:text="${birthdate}"></span>
+                <input name="birthdate" type="date"/>
+            </div>
+            <div class="form-group">
+                <label>Телефон</label>
+                <span th:text="${phone}"></span>
+                <input name="phone" type="text"/>
+            </div>
+            <div class="button-group">
+                <button>Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Работа с наличными -->
+    <div class="card">
+        <h2>Наличные</h2>
+        <div class="message">
+            <p style="color:red;" th:if="${cashErrors != null}" th:each="cashError : ${cashErrors}" th:text="${cashError}"></p>
+            <p style="color:green;" th:if="${successCashMessage != null}" th:text="${successCashMessage}"></p>
+        </div>
+        <form method="post" th:action="@{'/cash'}">
+            <div class="form-group">
+                <label>Сумма</label>
+                <input name="amount" type="number" required/>
+            </div>
+            <div class="button-group">
+                <button name="action" value="PUT">Положить</button>
+                <button name="action" value="GET">Снять</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Перевод -->
+    <div class="card">
+        <h2>Перевод</h2>
+        <div class="message">
+            <p style="color:red;" th:if="${transferErrors != null}" th:each="transferError : ${transferErrors}" th:text="${transferError}"></p>
+            <p style="color:green;" th:if="${successTransferMessage != null}" th:text="${successTransferMessage}"></p>
+        </div>
+        <form method="post" th:action="@{'/transfer'}">
+            <div class="form-group">
+                <label>Сумма</label>
+                <input name="transferValue" type="number" required/>
+            </div>
+            <div class="form-group">
+                <label>Кому</label>
+                <select name="accountTo">
+                    <option th:each="account : ${accounts}" th:value="${account.getId()}"
+                            th:text="${account.getName()} + ' ' + ${account.getSurname()} + ' Тел.: ' + ${account.getPhone()}"></option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button>Перевести</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+</body>
 </html>
