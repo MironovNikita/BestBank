@@ -1,8 +1,12 @@
 package com.bank.controller.transfers;
 
 import com.bank.dto.transfer.TransferOperationDto;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatusCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,11 +16,14 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class TransfersController {
 
     private final WebClient transfersWebClient;
+    private final Retry transfersServiceRetry;
+    private final CircuitBreaker transfersServiceCB;
 
     @PostMapping("/transfer")
     public Mono<String> transfer(ServerWebExchange exchange, WebSession session) {
@@ -48,17 +55,30 @@ public class TransfersController {
                                             .post()
                                             .uri("/transfer")
                                             .bodyValue(transferOperationDto)
-                                            .retrieve()
-                                            .onStatus(HttpStatusCode::isError,
-                                                    resp -> resp.bodyToMono(String.class)
-                                                            .flatMap(body -> Mono.error(new RuntimeException(body))))
-                                            .toBodilessEntity()
-                                            .map(r -> {
-                                                session.getAttributes().put("successTransferMessage", "Операция перевода успешно выполнена");
-                                                return "redirect:/main";
+                                            .exchangeToMono(resp -> {
+                                                if (resp.statusCode().is4xxClientError()) {
+                                                    return resp.bodyToMono(String.class)
+                                                            .map(msg -> {
+                                                                log.error("4хх ошибка при обращении (перевод средств) к accounts-service: {}", msg);
+                                                                session.getAttributes().put("transferErrors", List.of(msg));
+                                                                return "redirect:/main";
+                                                            });
+                                                }
+                                                if (resp.statusCode().is5xxServerError()) {
+                                                    return resp.bodyToMono(String.class)
+                                                            .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                                                }
+                                                return resp.releaseBody()
+                                                        .then(Mono.fromCallable(() -> {
+                                                            session.getAttributes().put("successTransferMessage", "Операция перевода успешно выполнена");
+                                                            return "redirect:/main";
+                                                        }));
                                             })
+                                            .transformDeferred(CircuitBreakerOperator.of(transfersServiceCB))
+                                            .transformDeferred(RetryOperator.of(transfersServiceRetry))
                                             .onErrorResume(ex -> {
-                                                session.getAttributes().put("transferErrors", List.of(ex.getMessage()));
+                                                log.error("Произошла ошибка при обращении (перевод средств) к transfers-service: {}", ex.getMessage());
+                                                session.getAttributes().put("transferErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
                                                 return Mono.just("redirect:/main");
                                             });
                                 })

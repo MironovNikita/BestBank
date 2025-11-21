@@ -12,12 +12,16 @@ import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.dto.email.EmailNotificationDto;
-import com.bank.dto.transfer.TransferOperationDto;
-import com.bank.entity.Account;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
+import com.bank.dto.transfer.TransferOperationDto;
+import com.bank.entity.Account;
 import com.bank.repository.AccountRepository;
 import com.bank.security.SecureBase64Converter;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,6 +46,8 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
     private final SecureBase64Converter converter;
+    private final Retry notificationsServiceRetry;
+    private final CircuitBreaker notificationsServiceCB;
 
     @Override
     @Transactional
@@ -193,8 +199,19 @@ public class AccountServiceImpl implements AccountService {
                 .post()
                 .uri("/email")
                 .bodyValue(email)
-                .retrieve()
-                .toBodilessEntity()
+                .exchangeToMono(resp -> {
+                    if (resp.statusCode().isError()) {
+                        return resp.bodyToMono(String.class)
+                                .flatMap(msg -> {
+                                    log.error("Ошибка при отправке уведомления на почту: {}", toEmail);
+                                    return Mono.error(new RuntimeException(msg));
+                                });
+                    }
+                    log.info("Успешная отправка уведомления на почту: {}", toEmail);
+                    return Mono.empty();
+                })
+                .transformDeferred(CircuitBreakerOperator.of(notificationsServiceCB))
+                .transformDeferred(RetryOperator.of(notificationsServiceRetry))
                 .then();
     }
 

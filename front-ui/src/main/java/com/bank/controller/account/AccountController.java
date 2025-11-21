@@ -2,23 +2,29 @@ package com.bank.controller.account;
 
 import com.bank.dto.account.AccountPasswordChangeDto;
 import com.bank.dto.account.AccountUpdateDto;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatusCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class AccountController {
 
     private final WebClient accountsWebClient;
+    private final Retry accountsServiceRetry;
+    private final CircuitBreaker accountsServiceCB;
 
     @PostMapping("/editPassword")
     public Mono<String> editPassword(@ModelAttribute AccountPasswordChangeDto changePass, WebSession session) {
@@ -28,24 +34,33 @@ public class AccountController {
                         .post()
                         .uri("/accounts/{id}/editPassword", userId)
                         .bodyValue(changePass)
-                        .retrieve()
-                        .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
-                                .flatMap(body -> Mono.error(new RuntimeException(body))))
-                        .toBodilessEntity()
-                        .map(response -> {
-                            session.getAttributes().put("successPasswordMessage", "Пароль был успешно изменён");
-                            return "redirect:/main";
+                        .exchangeToMono(resp -> {
+                            if (resp.statusCode().is4xxClientError()) {
+                                return resp.bodyToMono(String.class)
+                                        .map(msg -> {
+                                            log.error("4хх ошибка при обращении (изменение пароля) к accounts-service: {}", msg);
+                                            session.getAttributes().put("accountErrors", List.of(msg));
+                                            return "redirect:/main";
+                                        });
+                            }
+                            if (resp.statusCode().is5xxServerError()) {
+                                return resp.bodyToMono(String.class)
+                                        .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                            }
+                            return resp.releaseBody()
+                                    .then(Mono.fromCallable(() -> {
+                                        session.getAttributes().put("successPasswordMessage", "Пароль был успешно изменён");
+                                        return "redirect:/main";
+                                    }));
                         })
-                        .onErrorResume(WebClientResponseException.class, ex -> {
-                            session.getAttributes().put("passwordErrors", List.of(ex.getResponseBodyAsString()));
-                            return Mono.just("redirect:/main");
-                        })
-                        .onErrorResume(Exception.class, ex -> {
-                            session.getAttributes().put("passwordErrors", List.of(ex.getMessage()));
+                        .onErrorResume(ex -> {
+                            log.error("5хх ошибка при обращении (изменение пароля) к accounts-service: {}", ex.getMessage());
+                            session.getAttributes().put("passwordErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
                             return Mono.just("redirect:/main");
                         })
                 )
                 .onErrorResume(ex -> {
+                    log.error("Ошибка при проверке userId (изменение пароля)");
                     session.getAttributes().put("passwordErrors", List.of(ex.getMessage()));
                     return Mono.just("redirect:/main");
                 });
@@ -59,24 +74,35 @@ public class AccountController {
                         .post()
                         .uri("/accounts/{id}/editAccount", userId)
                         .bodyValue(accountUpdateDto)
-                        .retrieve()
-                        .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
-                                .flatMap(body -> Mono.error(new RuntimeException(body))))
-                        .toBodilessEntity()
-                        .map(response -> {
-                            session.getAttributes().put("successUpdateAccMessage", "Аккаунт был успешно обновлён");
-                            return "redirect:/main";
+                        .exchangeToMono(resp -> {
+                            if (resp.statusCode().is4xxClientError()) {
+                                return resp.bodyToMono(String.class)
+                                        .map(msg -> {
+                                            log.error("4хх ошибка при обращении (изменение аккаунта) к accounts-service: {}", msg);
+                                            session.getAttributes().put("accountErrors", List.of(msg));
+                                            return "redirect:/main";
+                                        });
+                            }
+                            if (resp.statusCode().is5xxServerError()) {
+                                return resp.bodyToMono(String.class)
+                                        .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                            }
+                            return resp.releaseBody()
+                                    .then(Mono.fromCallable(() -> {
+                                        session.getAttributes().put("successUpdateAccMessage", "Аккаунт был успешно обновлён");
+                                        return "redirect:/main";
+                                    }));
                         })
-                        .onErrorResume(WebClientResponseException.class, ex -> {
-                            session.getAttributes().put("accountErrors", List.of(ex.getResponseBodyAsString()));
-                            return Mono.just("redirect:/main");
-                        })
-                        .onErrorResume(Exception.class, ex -> {
-                            session.getAttributes().put("accountErrors", List.of(ex.getMessage()));
+                        .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
+                        .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                        .onErrorResume(ex -> {
+                            log.error("5хх ошибка при обращении (изменение аккаунта) к accounts-service: {}", ex.getMessage());
+                            session.getAttributes().put("accountErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
                             return Mono.just("redirect:/main");
                         })
                 )
                 .onErrorResume(ex -> {
+                    log.error("Ошибка при проверке userId (изменение аккаунта)");
                     session.getAttributes().put("accountErrors", List.of(ex.getMessage()));
                     return Mono.just("redirect:/main");
                 });

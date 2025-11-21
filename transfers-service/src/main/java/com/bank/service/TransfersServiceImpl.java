@@ -7,6 +7,10 @@ import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.TransferOperation;
 import com.bank.repository.TransfersRepository;
 import com.bank.security.SecureBase64Converter;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,10 @@ public class TransfersServiceImpl implements TransfersService {
     private final WebClient notificationsWebClient;
     private final TransferOperationMapper transferOperationMapper;
     private final SecureBase64Converter converter;
+    private final Retry notificationsServiceRetry;
+    private final CircuitBreaker notificationsServiceCB;
+    private final Retry accountsServiceRetry;
+    private final CircuitBreaker accountsServiceCB;
 
     @Override
     @Transactional
@@ -38,21 +46,43 @@ public class TransfersServiceImpl implements TransfersService {
                 .post()
                 .uri("/accounts/transfer")
                 .bodyValue(transferOperationDto)
-                .retrieve()
-                .toBodilessEntity()
-                .doOnSuccess(v -> log.info("Перевод c ID {} на ID {} выполнен успешно.", transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo()))
-                .then(transfersRepository.save(transferOperation))
-                .doOnSuccess(v -> {
+                .exchangeToMono(resp -> {
+                    if (resp.statusCode().is4xxClientError()) {
+                        return resp.bodyToMono(String.class)
+                                .flatMap(msg -> {
+                                    log.error("4хх ошибка при обращении (запрос перевода средств) к accounts-service: {}", msg);
+                                    return Mono.error(new TransferException());
+                                });
+                    }
+                    if (resp.statusCode().is5xxServerError()) {
+                        return resp.bodyToMono(String.class)
+                                .flatMap(msg -> {
+                                    log.error("5хх ошибка при обращении (запрос перевода средств) к accounts-service: {}", msg);
+                                    return Mono.error(new RuntimeException(msg));
+                                });
+                    }
+                    return resp.releaseBody();
+                })
+                .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
+                .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                .then(Mono.defer(() -> {
+                    log.info("Перевод c ID {} на ID {} выполнен успешно.", transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo());
                     String email = converter.decrypt(transferOperationDto.getEmail());
                     sendNotification(email, TRANSFER_OPERATION_SUBJECT, TRANSFER_CHANGE_TEXT)
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> log.error("Ошибка при отправке уведомления для {}: {}", email, ex.getMessage()))
                             .subscribe();
-                })
+                    return transfersRepository.save(transferOperation);
+                }))
                 .then()
                 .onErrorResume(ex -> {
-                    log.error("Перевод со счёта ID: {} на счёт ID: {} завершился с ошибкой: {}", transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo(), ex.getMessage());
-                    return Mono.error(new TransferException());
+                    if (ex instanceof TransferException) log.error("Перевод со счёта ID: {} на счёт ID: {} завершился с ошибкой: {}",
+                            transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo(), ex.getMessage());
+
+                    else log.error("Перевод со счёта ID: {} на счёт ID: {} завершился технической ошибкой: {}",
+                            transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo(), ex.getMessage());
+
+                    return Mono.error(ex);
                 });
     }
 
@@ -63,8 +93,19 @@ public class TransfersServiceImpl implements TransfersService {
                 .post()
                 .uri("/email")
                 .bodyValue(email)
-                .retrieve()
-                .toBodilessEntity()
+                .exchangeToMono(resp -> {
+                    if (resp.statusCode().isError()) {
+                        return resp.bodyToMono(String.class)
+                                .flatMap(msg -> {
+                                    log.error("Ошибка при отправке уведомления на почту: {}", toEmail);
+                                    return Mono.error(new RuntimeException(msg));
+                                });
+                    }
+                    log.info("Успешная отправка уведомления на почту: {}", toEmail);
+                    return Mono.empty();
+                })
+                .transformDeferred(CircuitBreakerOperator.of(notificationsServiceCB))
+                .transformDeferred(RetryOperator.of(notificationsServiceRetry))
                 .then();
     }
 }

@@ -49,8 +49,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WebExchangeBindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Mono<String> handleConstraintViolationException(WebExchangeBindException e) {
-        log.error("Возникло ConstraintViolationException: {}", e.getMessage(), e);
+    public Mono<String> handleWebExchangeBindException(WebExchangeBindException e) {
+        log.error("Возникло WebExchangeBindException: {}", e.getMessage(), e);
         String fieldErrors = e.getFieldErrors()
                 .stream()
                 .map(fe -> {
