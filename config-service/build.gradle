@@ -8,9 +8,6 @@ description = 'Configuration Service'
 
 dependencies {
     implementation "org.springframework.cloud:spring-cloud-config-server" exclude group: "net.i2p.crypto", module: "eddsa"
-
-    //testImplementation platform('org.junit:junit-bom:5.10.0')
-    //testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 springBoot {
