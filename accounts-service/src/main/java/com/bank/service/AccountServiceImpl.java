@@ -1,9 +1,6 @@
 package com.bank.service;
 
-import com.bank.common.exception.LoginException;
-import com.bank.common.exception.ObjectNotFoundException;
-import com.bank.common.exception.PasswordEditException;
-import com.bank.common.exception.RegistrationException;
+import com.bank.common.exception.*;
 import com.bank.common.mapper.AccountMapper;
 import com.bank.dto.account.AccountMainPageDto;
 import com.bank.dto.account.AccountPasswordChangeDto;
@@ -11,24 +8,18 @@ import com.bank.dto.account.AccountUpdateDto;
 import com.bank.dto.account.RegisterAccountRequest;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
-import com.bank.dto.email.EmailNotificationDto;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.Account;
 import com.bank.repository.AccountRepository;
 import com.bank.security.SecureBase64Converter;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
-import io.github.resilience4j.reactor.retry.RetryOperator;
-import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -41,13 +32,11 @@ import static com.bank.dto.email.EmailTemplates.*;
 @Transactional(readOnly = true)
 public class AccountServiceImpl implements AccountService {
 
-    private final WebClient notificationsWebClient;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
     private final SecureBase64Converter converter;
-    private final Retry notificationsServiceRetry;
-    private final CircuitBreaker notificationsServiceCB;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -58,7 +47,7 @@ public class AccountServiceImpl implements AccountService {
                 .flatMap(acc -> {
                     log.info("Успешное создание аккаунта с ID: {}", acc.getId());
 
-                    sendNotification(req.getEmail(), REGISTRATION_SUBJECT, REGISTRATION_TEXT.formatted(acc.getName(), acc.getSurname()))
+                    notificationService.sendNotification(req.getEmail(), REGISTRATION_SUBJECT, REGISTRATION_TEXT.formatted(acc.getName(), acc.getSurname()))
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> logEmailError(req.getEmail(), ex.getMessage()))
                             .subscribe();
@@ -102,7 +91,7 @@ public class AccountServiceImpl implements AccountService {
                     account.setPassword(passwordEncoder.encode(newPassword));
 
                     String email = converter.decrypt(account.getEmail());
-                    sendNotification(email, PASSWORD_CHANGE_SUBJECT, PASSWORD_CHANGE_TEXT)
+                    notificationService.sendNotification(email, PASSWORD_CHANGE_SUBJECT, PASSWORD_CHANGE_TEXT)
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> logEmailError(email, ex.getMessage()))
                             .subscribe();
@@ -130,17 +119,23 @@ public class AccountServiceImpl implements AccountService {
                     if (checkField(accountUpdateDto.getPhone())) account.setPhone(accountUpdateDto.getPhone());
                     if (accountUpdateDto.getBirthdate() != null) account.setBirthdate(accountUpdateDto.getBirthdate());
 
-                    String email =
-                            (accountUpdateDto.getEmail() != null && !accountUpdateDto.getEmail().isBlank())
-                                    ? accountUpdateDto.getEmail()
-                                    : converter.decrypt(account.getEmail());
-                    sendNotification(email, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
-                            .subscribeOn(Schedulers.boundedElastic())
-                            .doOnError(ex -> logEmailError(email, ex.getMessage()))
-                            .subscribe();
-
                     return accountRepository.save(account)
-                            .doOnSuccess(saved -> log.info("Данные пользователя с ID {} были успешно обновлены.", saved.getId()));
+                            .flatMap(updated -> {
+                                String email =
+                                        (accountUpdateDto.getEmail() != null && !accountUpdateDto.getEmail().isBlank())
+                                                ? accountUpdateDto.getEmail()
+                                                : converter.decrypt(account.getEmail());
+                                notificationService.sendNotification(email, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
+                                        .subscribeOn(Schedulers.boundedElastic())
+                                        .doOnError(ex -> logEmailError(email, ex.getMessage()))
+                                        .subscribe();
+                                log.info("Данные пользователя с ID {} были успешно обновлены.", updated.getId());
+                                return Mono.just(updated);
+                            })
+                            .onErrorMap(ex -> {
+                                log.error("Возникло исключение при обновлении данных: {}", ex.getMessage());
+                                return new AccountEditException();
+                            });
                 })
                 .doOnError(error -> log.error("Ошибка обновления данных для пользователя с ID {}: {}", id, error.getMessage()))
                 .then();
@@ -190,29 +185,6 @@ public class AccountServiceImpl implements AccountService {
 
     private boolean checkField(String field) {
         return field != null && !field.isEmpty();
-    }
-
-    private Mono<Void> sendNotification(String toEmail, String subject, String text) {
-        EmailNotificationDto email = new EmailNotificationDto(toEmail, subject, text);
-
-        return notificationsWebClient
-                .post()
-                .uri("/email")
-                .bodyValue(email)
-                .exchangeToMono(resp -> {
-                    if (resp.statusCode().isError()) {
-                        return resp.bodyToMono(String.class)
-                                .flatMap(msg -> {
-                                    log.error("Ошибка при отправке уведомления на почту: {}", toEmail);
-                                    return Mono.error(new RuntimeException(msg));
-                                });
-                    }
-                    log.info("Успешная отправка уведомления на почту: {}", toEmail);
-                    return Mono.empty();
-                })
-                .transformDeferred(CircuitBreakerOperator.of(notificationsServiceCB))
-                .transformDeferred(RetryOperator.of(notificationsServiceRetry))
-                .then();
     }
 
     private void logEmailError(String email, String exceptionMessage) {
