@@ -31,7 +31,7 @@ public class CashServiceTest {
     @Mock
     private AccountsServiceClient accountsServiceClient;
     @Mock
-    private NotificationServiceClient notificationServiceClient;
+    private NotificationsServiceClient notificationsServiceClient;
 
     @InjectMocks
     private CashServiceImpl cashService;
@@ -51,7 +51,7 @@ public class CashServiceTest {
         when(accountsServiceClient.updateRemoteBalance(9000L, accountId)).thenReturn(Mono.empty());
         when(cashRepository.save(operation)).thenReturn(Mono.just(operation));
         when(converter.decrypt(anyString())).thenReturn(dto.getEmail());
-        when(notificationServiceClient.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsServiceClient.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(cashService.operateCash(dto))
                 .verifyComplete();
@@ -61,7 +61,7 @@ public class CashServiceTest {
         verify(accountsServiceClient).updateRemoteBalance(9000L, accountId);
         verify(cashRepository).save(operation);
         verify(converter).decrypt(anyString());
-        verify(notificationServiceClient).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsServiceClient).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -86,6 +86,6 @@ public class CashServiceTest {
         verify(accountsServiceClient, never()).updateRemoteBalance(9000L, accountId);
         verify(cashRepository, never()).save(operation);
         verify(converter, never()).decrypt(anyString());
-        verify(notificationServiceClient, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsServiceClient, never()).sendNotification(anyString(), anyString(), anyString());
     }
 }

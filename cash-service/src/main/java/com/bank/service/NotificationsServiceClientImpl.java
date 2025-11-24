@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationsServiceClientImpl implements NotificationServiceClient {
+public class NotificationsServiceClientImpl implements NotificationsServiceClient {
 
     private final WebClient notificationsWebClient;
     private final Retry notificationsServiceRetry;
