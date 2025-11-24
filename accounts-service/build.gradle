@@ -2,9 +2,13 @@ plugins {
     id 'java'
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
+    id 'maven-publish'
+    id 'org.springframework.cloud.contract' version("${springCloudContractVersion}")
 }
 
 description = 'Accounts Service'
+group = "com.bank"
+version = '0.0.1-SNAPSHOT'
 
 dependencies {
     implementation project(':common')
@@ -24,6 +28,31 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
+
+    implementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:${springCloudContractVersion}"
+    testImplementation "org.springframework.cloud:spring-cloud-starter-contract-verifier:${springCloudContractVersion}"
+    testImplementation 'io.rest-assured:spring-web-test-client'
+}
+
+contracts {
+    baseClassForTests = 'com.bank.contract.BaseContractTestClass'
+    failOnNoContracts = true
+    testMode = 'WEBTESTCLIENT'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+
+        stubs(MavenPublication) {
+            groupId = project.group
+            artifactId = "${project.name}-stubs"
+            version = project.version
+            artifact(tasks.named("verifierStubsJar"))
+        }
+    }
 }
 
 springBoot {

@@ -80,7 +80,8 @@ public class MainController {
                 .transformDeferred(RetryOperator.of(accountsServiceRetry))
                 .onErrorResume(ex -> {
                     log.error("5хх ошибка при обращении к accounts-service (register): {}", ex.getMessage());
-                    model.addAttribute("errors", List.of("Произошла неизвестная ошибка. Попробуйте позднее."));
+                    var errors = model.getAttribute("errors");
+                    if (errors != null) model.addAttribute("errors", List.of("Произошла неизвестная ошибка. Попробуйте позднее."));
                     return Mono.just("register");
                 });
     }
@@ -139,7 +140,8 @@ public class MainController {
                 .transformDeferred(RetryOperator.of(accountsServiceRetry))
                 .onErrorResume(ex -> {
                     log.error("5хх ошибка при обращении к accounts-service (login): {}", ex.getMessage());
-                    model.addAttribute("errors", List.of("Произошла неизвестная ошибка. Попробуйте позднее."));
+                    var errors = model.getAttribute("errors");
+                    if (errors != null) model.addAttribute("errors", List.of("Произошла неизвестная ошибка. Попробуйте позднее."));
                     return Mono.just("login");
                 });
     }
