@@ -1,4 +1,4 @@
-package com.bank;
+package com.bank.contract;
 
 import com.bank.dto.account.RegisterAccountRequest;
 import org.junit.jupiter.api.DisplayName;

@@ -3,16 +3,15 @@ package contracts
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Should edit account password")
+    description("Should edit balance")
     request {
         method POST()
-        url("/accounts/3/editPassword") {}
+        url("/accounts/3/balance") {}
         headers {
             contentType(applicationJson())
         }
         body(
-                newPassword: "Password1111",
-                confirmPassword: "Password1111"
+                balance: 1000
         )
     }
     response {

@@ -42,6 +42,10 @@ public class MockBeanConfig {
 
         when(mock.editPassword(anyLong(), any())).thenReturn(Mono.empty());
 
+        when(mock.updateBalance(anyLong(), any())).thenReturn(Mono.empty());
+
+        when(mock.transfer(any())).thenReturn(Mono.empty());
+
         return mock;
     }
 

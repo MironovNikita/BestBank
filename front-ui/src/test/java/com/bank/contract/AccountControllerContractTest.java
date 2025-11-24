@@ -1,4 +1,4 @@
-package com.bank;
+package com.bank.contract;
 
 import com.bank.dto.account.AccountPasswordChangeDto;
 import com.bank.dto.account.AccountUpdateDto;
