@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'maven-publish'
+    id 'org.springframework.cloud.contract' version("${springCloudContractVersion}")
+}
+
+description = 'Transfers Service'
+group = "com.bank"
+version = '0.0.1-SNAPSHOT'
+
+dependencies {
+    implementation project(':common')
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation 'org.postgresql:r2dbc-postgresql'
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'org.postgresql:postgresql'
+
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+    implementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:${springCloudContractVersion}"
+    testImplementation "org.springframework.cloud:spring-cloud-starter-contract-verifier:${springCloudContractVersion}"
+    testImplementation 'io.rest-assured:spring-web-test-client'
+}
+
+contracts {
+    baseClassForTests = 'com.bank.contract.BaseContractTestClass'
+    failOnNoContracts = true
+    testMode = 'WEBTESTCLIENT'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+
+        stubs(MavenPublication) {
+            groupId = project.group
+            artifactId = "${project.name}-stubs"
+            version = project.version
+            artifact(tasks.named("verifierStubsJar"))
+        }
+    }
+}
+
+springBoot {
+    mainClass = 'com.bank.TransfersServiceApp'
+}

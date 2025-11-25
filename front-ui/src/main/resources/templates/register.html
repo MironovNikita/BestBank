@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация в Лучшем Банке</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 40px 35px;
+            width: 360px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 22px;
+            color: #1f2937;
+            text-align: center;
+        }
+
+        .form-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .form-group input {
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #f9fafb;
+        }
+
+        .form-group input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 6px rgba(99, 102, 241, 0.25);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #6366f1, #4f46e5);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.25s, transform 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #4f46e5, #4338ca);
+            transform: translateY(-1px);
+        }
+
+        .link {
+            margin-top: 15px;
+            font-size: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .link:hover {
+            color: #4f46e5;
+        }
+
+        .message {
+            margin-bottom: 17px;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .success {
+            color: #16a34a;
+            margin-bottom: 17px;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-bottom: 17px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        li {
+            list-style-type: disc;
+        }
+    </style>
+</head>
+<body>
+<form th:action="@{/register}" method="post">
+    <h1>Регистрация в Лучшем Банке</h1>
+
+    <div th:if="${errors != null}" class="message error">
+        <ul>
+            <li th:each="err : ${errors}" th:text="${err}"></li>
+        </ul>
+    </div>
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" name="email" th:value="${register?.email}" required/>
+    </div>
+
+    <div class="form-group">
+        <label for="password">Пароль</label>
+        <input id="password" type="password" name="password" required/>
+    </div>
+
+    <div class="form-group">
+        <label for="name">Имя</label>
+        <input id="name" type="text" name="name" th:value="${register?.name}" required/>
+    </div>
+
+    <div class="form-group">
+        <label for="surname">Фамилия</label>
+        <input id="surname" type="text" name="surname" th:value="${register?.surname}" required/>
+    </div>
+
+    <div class="form-group">
+        <label for="birthdate">Дата рождения</label>
+        <input id="birthdate" type="date" name="birthdate" th:value="${register?.birthdate}" required/>
+    </div>
+
+    <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input id="phone" type="text" name="phone" th:value="${register?.phone}" required/>
+    </div>
+
+    <button type="submit">Зарегистрироваться</button>
+
+    <a th:href="@{/login}" class="link">Уже есть аккаунт? Войти</a>
+</form>
+</body>
+</html>

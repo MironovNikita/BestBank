@@ -8,11 +8,6 @@ description = 'Configuration Service'
 
 dependencies {
     implementation "org.springframework.cloud:spring-cloud-config-server" exclude group: "net.i2p.crypto", module: "eddsa"
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    //testImplementation platform('org.junit:junit-bom:5.10.0')
-    //testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 springBoot {

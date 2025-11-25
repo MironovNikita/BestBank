@@ -13,3 +13,11 @@ pluginManagement {
 rootProject.name = 'BestBank'
 
 include 'config-service'
+include 'discovery-service'
+include 'front-ui'
+include 'accounts-service'
+include 'transfers-service'
+include 'cash-service'
+include 'notification-service'
+include 'common'
+

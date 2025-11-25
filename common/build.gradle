@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+group = 'com.bank'
+version = '0.0.1-SNAPSHOT'
+description = 'Common files'
