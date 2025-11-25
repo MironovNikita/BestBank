@@ -3,6 +3,7 @@ package com.bank.contract.account;
 import com.bank.contract.MockitoBeanConfig;
 import com.bank.controller.CashController;
 import com.bank.service.AccountsServiceClientImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -27,6 +28,7 @@ public class CashServiceAccountsContractTest {
     private AccountsServiceClientImpl accountsServiceClient;
 
     @Test
+    @DisplayName("Проверка получения баланса")
     void testGetCurrentBalance() {
         StepVerifier.create(accountsServiceClient.getCurrentBalance(3L))
                 .expectNext(1000L)
@@ -34,6 +36,7 @@ public class CashServiceAccountsContractTest {
     }
 
     @Test
+    @DisplayName("Проверка обновления баланса")
     void testUpdateRemoteBalance() {
         StepVerifier.create(accountsServiceClient.updateRemoteBalance(1000L, 3L))
                 .verifyComplete();

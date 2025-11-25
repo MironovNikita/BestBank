@@ -4,6 +4,7 @@ import com.bank.contract.MockBeanConfig;
 import com.bank.controller.TransfersController;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.service.AccountsServiceClientImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -28,6 +29,7 @@ public class TransfersServiceAccountsContractTest {
     private AccountsServiceClientImpl accountsServiceClient;
 
     @Test
+    @DisplayName("Проверка вызова операции перевода")
     void testTransfer() {
         TransferOperationDto dto = new TransferOperationDto(3L, 2L, "test@test.ru", 1000L);
 
