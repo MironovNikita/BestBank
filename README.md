@@ -71,21 +71,21 @@
 База данных аккаунтов:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/accountsTable.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/accountsTable.png">
 
 </p>
 
 База данных операций с наличными:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/cashTable.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/cashTable.png">
 
 </p>
 
 База данных переводов:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/transfersTable.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/transfersTable.png">
 
 </p>
 
@@ -235,21 +235,21 @@ config-service -> discovery-service -> (accounts-service, cash-service, transfer
 При входе в приложение нас встречает страница авторизации:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/login.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/login.png">
 
 </p>
 
 Если введём неверные данные, программа нас не пропустит:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/loginFailed.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/loginFailed.png">
 
 </p>
 
 Можем перейти к регистрации:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/register.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/register.png">
 
 </p>
 
@@ -259,56 +259,56 @@ config-service -> discovery-service -> (accounts-service, cash-service, transfer
 После регистрации можем смело заходить по нашим данным в приложение:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/registerSuccess.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/registerSuccess.png">
 
 </p>
 
 Теперь мы можем воспользоваться полным функционалом.
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/main.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/main.png">
 
 </p>
 
 Изменим свои персональные данные: 
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/mainPersonal.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainPersonal.png">
 
 </p>
 
 Снимем все деньги со счёта:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/mainCash.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainCash.png">
 
 </p>
 
 Теперь попробуем сделать кому-нибудь перевод:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/mainTransfer.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainTransfer.png">
 
 </p>
 
 Отрицательные числа не принимаем. Схитрить не получится :)
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/mainMinus.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainMinus.png">
 
 </p>
 
 Положим деньги на счёт:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/cashPlus.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/cashPlus.png">
 
 </p>
 
 Теперь сделаем перевод:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/transferPlus.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/transferPlus.png">
 
 </p>
 
@@ -317,14 +317,14 @@ config-service -> discovery-service -> (accounts-service, cash-service, transfer
 Уведомления, которые получает пользователь:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/notifications.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/notifications.png">
 
 </p>
 
 Внутри письмо лаконичного содержания:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/email.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/email.png">
 
 </p>
 
@@ -423,7 +423,7 @@ Contract.make {
 Каждая команда соберёт стабы для API микросервиса с сохранением в локальный репозиторий:
 <p align="center">
 
-  <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/stubs.png">
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/stubs.png">
 
 </p>
 
