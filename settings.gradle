@@ -22,4 +22,5 @@ include 'notification-service'
 include 'common'
 include 'exchange-generator'
 include 'exchange-service'
+include 'blocker-service'
 
