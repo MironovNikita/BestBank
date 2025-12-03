@@ -1,30 +1,21 @@
 package com.bank.common.mapper;
 
-import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.account.AccountCreateDto;
 import com.bank.entity.Account;
-import com.bank.security.SecureBase64Converter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
-@RequiredArgsConstructor
 public class AccountMapper {
 
-    private final SecureBase64Converter converter;
-    private final PasswordEncoder encoder;
-
-    public Account toAccount(RegisterAccountRequest request) {
-
+    public Account toAccount(AccountCreateDto dto, Long userId) {
         return new Account(
                 null,
-                converter.encrypt(request.getEmail().toLowerCase()),
-                encoder.encode(request.getPassword()),
-                request.getName(),
-                request.getSurname(),
-                request.getBirthdate(),
-                request.getPhone(),
-                0L);
+                userId,
+                dto.getTitle(),
+                dto.getCurrency(),
+                BigDecimal.valueOf(0)
+        );
     }
-
 }

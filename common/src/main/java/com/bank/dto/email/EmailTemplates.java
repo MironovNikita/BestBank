@@ -6,6 +6,8 @@ public class EmailTemplates {
     public static final String ACCOUNT_CHANGE_SUBJECT = "Данные аккаунта успешно изменены";
     public static final String CASH_OPERATION_SUBJECT = "Операция с наличными успешно завершена";
     public static final String TRANSFER_OPERATION_SUBJECT = "Перевод средств успешно совершён";
+    public static final String ACCOUNT_CREATION_SUBJECT = "Счёт успешно открыт";
+    public static final String ACCOUNT_DELETION_SUBJECT = "Счёт успешно удалён";
 
     public static final String REGISTRATION_TEXT = """
             Дорогой %s %s!
@@ -35,5 +37,17 @@ public class EmailTemplates {
             Дорогой пользователь!
             
             Операция по переводу средств успешно проведена.
+            Если это были не Вы, срочно свяжитесь с нашим банком!""";
+
+    public static final String ACCOUNT_CREATION_TEXT = """
+            Дорогой пользователь!
+            
+            В личном кабинете был успешно открыт счёт в валюте %s.
+            Если это были не Вы, срочно свяжитесь с нашим банком!""";
+
+    public static final String ACCOUNT_DELETION_TEXT = """
+            Дорогой пользователь!
+            
+            В личном кабинете был успешно удалён счёт в валюте %s.
             Если это были не Вы, срочно свяжитесь с нашим банком!""";
 }

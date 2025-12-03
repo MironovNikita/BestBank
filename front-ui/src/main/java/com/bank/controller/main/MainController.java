@@ -1,10 +1,10 @@
 package com.bank.controller.main;
 
-import com.bank.dto.account.AccountMainPageDto;
-import com.bank.dto.account.RegisterAccountRequest;
-import com.bank.dto.cash.BalanceDto;
+import com.bank.dto.account.AccountListDto;
+import com.bank.dto.currency.Currency;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
+import com.bank.dto.user.RegisterUserRequest;
 import com.bank.security.CustomUserDetails;
 import com.bank.security.SecureBase64Converter;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -13,7 +13,6 @@ import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,7 +28,9 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -49,10 +50,10 @@ public class MainController {
     }
 
     @PostMapping("/register")
-    public Mono<String> register(@ModelAttribute RegisterAccountRequest registerRequest, Model model) {
+    public Mono<String> register(@ModelAttribute RegisterUserRequest registerRequest, Model model) {
         return accountsWebClient
                 .post()
-                .uri("/accounts/register")
+                .uri("/users/register")
                 .bodyValue(registerRequest)
                 .exchangeToMono(resp -> {
 
@@ -98,7 +99,7 @@ public class MainController {
 
         return accountsWebClient
                 .post()
-                .uri("/accounts/login")
+                .uri("/users/login")
                 .bodyValue(loginRequest)
                 .exchangeToMono(resp -> {
                     if (resp.statusCode().is4xxClientError()) {
@@ -157,40 +158,50 @@ public class MainController {
 
         return checkUserId(session)
                 .flatMap(userId -> {
-                    Mono<List<AccountMainPageDto>> accountsMono = accountsWebClient
+                    /*Mono<List<AccountListDto>> accountsMono = accountsWebClient
                             .get()
                             .uri("/accounts/{id}", userId)
                             .retrieve()
                             .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
                                     .flatMap(body -> Mono.error(new RuntimeException(body))))
-                            .bodyToFlux(AccountMainPageDto.class)
+                            .bodyToFlux(AccountListDto.class)
                             .collectList()
                             .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
                             .transformDeferred(RetryOperator.of(accountsServiceRetry))
                             .onErrorResume(ex -> {
                                 log.error("Не удалось получить список аккаунтов: {}", ex.getMessage());
                                 return Mono.just(List.of());
-                            });
+                            });*/
 
-                    Mono<Long> balanceMono = accountsWebClient
+                    Mono<List<AccountListDto>> userAccounts = accountsWebClient
                             .get()
-                            .uri("/accounts/{id}/balance", userId)
+                            .uri("/accounts/currencies/{id}", userId)
                             .retrieve()
-                            .bodyToMono(BalanceDto.class)
-                            .map(BalanceDto::getBalance)
+                            .bodyToFlux(AccountListDto.class)
                             .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
                             .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                            .collectList()
                             .onErrorResume(ex -> {
-                                log.error("Не удалось получить баланс: {}", ex.getMessage());
-                                return Mono.just(Long.MIN_VALUE);
+                                log.error("Не удалось получить список счетов для пользователя с ID: {}", userId);
+                                return Mono.just(List.of());
                             });
 
-                    return Mono.zip(accountsMono, balanceMono)
+                    return Mono.zip(userAccounts, Mono.just(5))
                             .flatMap(tuple -> {
-                                model.addAttribute("accounts", tuple.getT1());
+                                var openedAccounts = tuple.getT1();
+                                var openedCurrencies = openedAccounts
+                                        .stream()
+                                        .map(AccountListDto::getCurrency)
+                                        .collect(Collectors.toSet());
+                                var availableCurrencies = Arrays.stream(Currency.values())
+                                        .filter(currency -> !openedCurrencies.contains(currency))
+                                        .collect(Collectors.toSet());
+
+                                model.addAttribute("userAccounts", openedAccounts);
                                 model.addAttribute("userName", session.getAttribute("userName"));
+                                model.addAttribute("availableCurrencies", availableCurrencies);
                                 var balance = tuple.getT2();
-                                model.addAttribute("balance", balance == Long.MIN_VALUE ? "Сервер временно недоступен. Попробуйте позже" : balance);
+                                //model.addAttribute("balance", balance == Long.MIN_VALUE ? "Сервер временно недоступен. Попробуйте позже" : balance);
                                 return Mono.just("main");
                             });
                 })
@@ -218,6 +229,8 @@ public class MainController {
         model.addAttribute("cashErrors", session.getAttribute("cashErrors"));
         model.addAttribute("successTransferMessage", session.getAttribute("successTransferMessage"));
         model.addAttribute("transferErrors", session.getAttribute("transferErrors"));
+        model.addAttribute("accountListSuccess", session.getAttribute("accountListSuccess"));
+        model.addAttribute("accountListErrors", session.getAttribute("accountListErrors"));
 
         session.getAttributes().remove("successPasswordMessage");
         session.getAttributes().remove("passwordErrors");
@@ -227,5 +240,7 @@ public class MainController {
         session.getAttributes().remove("cashErrors");
         session.getAttributes().remove("successTransferMessage");
         session.getAttributes().remove("transferErrors");
+        session.getAttributes().remove("accountListSuccess");
+        session.getAttributes().remove("accountListErrors");
     }
 }

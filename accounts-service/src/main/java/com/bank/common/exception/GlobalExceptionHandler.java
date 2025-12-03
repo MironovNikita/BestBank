@@ -70,10 +70,19 @@ public class GlobalExceptionHandler {
         return Mono.just(e.getMessage());
     }
 
+    //TODO Переделать в UserEditException
     @ExceptionHandler(AccountEditException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Mono<String> handleAccountEditException(AccountEditException e) {
         log.error("Возникло AccountEditException: {}", e.getMessage(), e);
+
+        return Mono.just(e.getMessage());
+    }
+
+    @ExceptionHandler(AccountOperationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<String> handleAccountOperationException(AccountOperationException e) {
+        log.error("Возникло AccountOperationException: {}", e.getMessage(), e);
 
         return Mono.just(e.getMessage());
     }

@@ -8,36 +8,35 @@
     <changeSet id="accounts" author="MironovNikita">
         <preConditions onFail="WARN">
             <not>
-                <tableExists tableName="accounts"/>
+                <tableExists tableName="users"/>
             </not>
         </preConditions>
 
-        <createTable tableName="accounts">
+        <createTable tableName="users">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="owner_id" type="bigint">
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="title" type="varchar(50)">
+            <column name="name" type="varchar(150)">
                 <constraints nullable="false"/>
             </column>
-            <column name="currency" type="varchar(10)">
+            <column name="surname" type="varchar(150)">
                 <constraints nullable="false"/>
             </column>
-            <column name="balance" type="decimal(15,2)" defaultValueNumeric="0">
+            <column name="birthdate" type="date">
                 <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
             </column>
         </createTable>
         <rollback>
-            <dropTable tableName="accounts"/>
+            <dropTable tableName="users"/>
         </rollback>
-
-        <addForeignKeyConstraint baseTableName="accounts"
-                                 baseColumnNames="owner_id"
-                                 constraintName="fk_user"
-                                 referencedTableName="users"
-                                 referencedColumnNames="id"
-                                 onDelete="CASCADE"/>
     </changeSet>
 </databaseChangeLog>

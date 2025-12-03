@@ -1,4 +1,4 @@
-package com.bank.dto.account;
+package com.bank.dto.user;
 
 import com.bank.validation.Adult;
 import com.bank.validation.Phone;
@@ -10,7 +10,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class AccountUpdateDto {
+public class UserUpdateDto {
     @Email(message = "Переданный email не соответствует формату.")
     @Size(min = 5, max = 50, message = "Размер email должен составлять от 5 до 50 символов")
     private String email;

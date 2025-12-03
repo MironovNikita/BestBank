@@ -1,4 +1,4 @@
-package com.bank.dto.account;
+package com.bank.dto.user;
 
 import com.bank.validation.Adult;
 import com.bank.validation.Phone;
@@ -8,7 +8,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class RegisterAccountRequest {
+public class RegisterUserRequest {
 
     @Email(message = "Переданный email не соответствует формату.")
     @NotBlank(message = "Поле email должно быть заполнено.")

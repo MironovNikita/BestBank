@@ -1,8 +1,7 @@
 package com.bank.repository;
 
-import com.bank.dto.account.AccountMainPageDto;
+import com.bank.dto.account.AccountListDto;
 import com.bank.entity.Account;
-import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.query.Param;
@@ -13,19 +12,26 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface AccountRepository extends R2dbcRepository<Account, Long>, AccountRepositoryCustom {
 
-    @Query("""
-            SELECT * from accounts a
-            WHERE a.email = :email
-            """)
-    Mono<Account> getAccountByEmail(@Param("email") String email);
 
     @Query("""
+            SELECT * FROM accounts a
+            WHERE a.owner_id = :id
+            """)
+    Flux<AccountListDto> getAllUserAccountsById(@Param("id") Long id);
+
+    @Query("""
+            SELECT balance FROM accounts a
+            WHERE a.id = :id
+            """)
+    Mono<Long> getAccountBalanceById(@Param("id") Long id);
+
+
+    /*@Query("""
             SELECT id, name, surname, phone FROM accounts
             WHERE id != :id
             """)
-    Flux<AccountMainPageDto> getAllAccountsForMainPage(@Param("id") Long id);
+    Flux<AccountListDto> getAllAccountsForMainPage(@Param("id") Long id);
 
-    Mono<Account> findAccountById(Long id);
 
     @Query("""
             SELECT balance FROM accounts a
@@ -38,5 +44,5 @@ public interface AccountRepository extends R2dbcRepository<Account, Long>, Accou
             WHERE a.id = :id
             """)
     @Modifying
-    Mono<Void> updateAccountBalance(@Param("id") Long id, @Param("balance") Long balance);
+    Mono<Void> updateAccountBalance(@Param("id") Long id, @Param("balance") Long balance);*/
 }

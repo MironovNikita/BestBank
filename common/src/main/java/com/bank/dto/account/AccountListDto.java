@@ -1,28 +1,18 @@
-package com.bank.entity;
+package com.bank.dto.account;
 
 import com.bank.dto.currency.Currency;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
 @Data
-@Table(name = "accounts")
 @AllArgsConstructor
-public class Account {
+public class AccountListDto {
 
-    @Id
     private Long id;
-
-    @Column("owner_id")
     private Long ownerId;
-
     private String title;
-
     private Currency currency;
-
     private BigDecimal balance;
 }
