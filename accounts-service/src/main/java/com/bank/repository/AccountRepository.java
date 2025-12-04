@@ -25,6 +25,12 @@ public interface AccountRepository extends R2dbcRepository<Account, Long>, Accou
             """)
     Mono<Long> getAccountBalanceById(@Param("id") Long id);
 
+    @Query("""
+            UPDATE accounts a
+            SET title = :title
+            WHERE a.id = :id
+            """)
+    Mono<Account> editAccountTitleById(@Param("id") Long id, @Param("title") String title);
 
     /*@Query("""
             SELECT id, name, surname, phone FROM accounts

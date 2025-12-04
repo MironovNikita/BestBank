@@ -2,6 +2,7 @@ package com.bank.controller;
 
 import com.bank.dto.account.AccountCreateDto;
 import com.bank.dto.account.AccountDeleteDto;
+import com.bank.dto.account.AccountEditDto;
 import com.bank.dto.account.AccountListDto;
 import com.bank.service.AccountService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,11 @@ public class AccountController {
     @PostMapping("/delete")
     public Mono<Void> deleteAccount(@Validated @RequestBody AccountDeleteDto dto) {
         return accountService.deleteAccount(dto);
+    }
+
+    @PostMapping("/edit")
+    public Mono<Void> editAccount(@Validated @RequestBody AccountEditDto dto) {
+        return accountService.editAccount(dto);
     }
 /*
     //TODO Переделать

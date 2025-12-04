@@ -4,6 +4,7 @@ import com.bank.common.exception.AccountOperationException;
 import com.bank.common.mapper.AccountMapper;
 import com.bank.dto.account.AccountCreateDto;
 import com.bank.dto.account.AccountDeleteDto;
+import com.bank.dto.account.AccountEditDto;
 import com.bank.dto.account.AccountListDto;
 import com.bank.entity.Account;
 import com.bank.repository.AccountRepository;
@@ -80,6 +81,28 @@ public class AccountServiceImpl implements AccountService {
                             })
                             .then();
                 });
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> editAccount(AccountEditDto dto) {
+        return accountRepository.editAccountTitleById(dto.getId(), dto.getNewTitle())
+                .flatMap(acc -> {
+                    log.info("Успешное обновление названия счёта с ID: {}", dto.getId());
+
+                    String email = converter.decrypt(dto.getEmail());
+                    notificationService.sendNotification(email, ACCOUNT_UPDATE_SUBJECT, ACCOUNT_UPDATE_TEXT.formatted(dto.getCurrency()))
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .doOnError(ex -> logEmailError(email, ex.getMessage()))
+                            .subscribe();
+
+                    return Mono.just(acc);
+                })
+                .onErrorResume(ex -> {
+                    log.error("При обновлении счёта в валюте {} возникла ошибка: {}", dto.getCurrency(), ex.getMessage());
+                    return Mono.error(ex);
+                })
+                .then();
     }
 
     /*@Override

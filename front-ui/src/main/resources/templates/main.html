@@ -347,16 +347,35 @@
                             <td th:text="${acc.balance}"></td>
 
                             <td>
-                                <form method="post" th:action="@{'/account/edit'}" style="display:inline;">
+
+                                <button type="button"
+                                        style="background:#4f46e5;"
+                                        th:attr="data-id=${acc.id}, data-title=${acc.title}"
+                                        onclick="showEditForm(this)">
+                                    Изменить
+                                </button>
+
+                                <form method="post" th:action="@{/accounts/edit}"
+                                      th:id="'edit-form-' + ${acc.id}"
+                                      style="display:none; margin-top:5px;">
+
                                     <input type="hidden" name="id" th:value="${acc.id}"/>
-                                    <button style="background:#4f46e5;">Изменить</button>
+                                    <input type="hidden" name="currency" th:value="${acc.currency}"/>
+
+                                    <input type="text" name="newTitle"
+                                           placeholder="Новое название"
+                                           style="padding:5px; width:270px"/>
+
+                                    <button style="background:green;">Сохранить</button>
                                 </form>
 
+                                <!-- УДАЛЕНИЕ -->
                                 <form method="post" th:action="@{/accounts/delete}" style="display:inline;">
                                     <input type="hidden" name="id" th:value="${acc.id}"/>
                                     <input type="hidden" name="currency" th:value="${acc.currency}"/>
                                     <button style="background:#dc2626;">Удалить</button>
                                 </form>
+
                             </td>
                         </tr>
                     </table>
@@ -443,3 +462,16 @@
 </div>
 </body>
 </html>
+
+<script>
+    function showEditForm(btn) {
+        const id = btn.dataset.id;
+        const title = btn.dataset.title;
+
+        const form = document.getElementById("edit-form-" + id);
+        form.style.display = form.style.display === "none" ? "block" : "none";
+
+        const input = form.querySelector("input[name='newTitle']");
+        if (input) input.value = title;
+    }
+</script>

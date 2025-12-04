@@ -2,6 +2,7 @@ package com.bank.controller.account;
 
 import com.bank.dto.account.AccountCreateDto;
 import com.bank.dto.account.AccountDeleteDto;
+import com.bank.dto.account.AccountEditDto;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
@@ -65,6 +66,49 @@ public class AccountController {
                                 }))
                 .onErrorResume(ex -> {
                     log.error("Ошибка авторизации: {}", ex.getMessage());
+                    session.getAttributes().put("accountListErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
+                    return Mono.just("redirect:/main");
+                });
+    }
+
+    @PostMapping("/accounts/edit")
+    public Mono<String> editAccount(@ModelAttribute AccountEditDto editRq, WebSession session) {
+        editRq.setEmail(session.getAttribute("email"));
+
+        return checkUserId(session)
+                .flatMap(userId ->
+                        accountsWebClient
+                                .post()
+                                .uri("/accounts/edit")
+                                .bodyValue(editRq)
+                                .exchangeToMono(resp -> {
+                                    if (resp.statusCode().is4xxClientError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> {
+                                                    log.error("4хх ошибка при обращении (изменение счёта) к accounts-service: {}", msg);
+                                                    session.getAttributes().put("accountListErrors", List.of(msg));
+                                                    return Mono.just("redirect:/main");
+                                                });
+                                    }
+                                    if (resp.statusCode().is5xxServerError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                                    }
+                                    return resp.releaseBody()
+                                            .then(Mono.fromCallable(() -> {
+                                                session.getAttributes().put("accountListSuccess", "Счёт успешно изменён");
+                                                return "redirect:/main";
+                                            }));
+                                })
+                                .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
+                                .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                                .onErrorResume(ex -> {
+                                    log.error("Произошла ошибка при обращении (изменение счёта) к accounts-service: {}", ex.getMessage());
+                                    session.getAttributes().put("accountListErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
+                                    return Mono.just("redirect:/main");
+                                }))
+                .onErrorResume(ex -> {
+                    log.error("Ошибка  авторизации: {}", ex.getMessage());
                     session.getAttributes().put("accountListErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
                     return Mono.just("redirect:/main");
                 });
