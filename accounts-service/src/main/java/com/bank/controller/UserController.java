@@ -28,8 +28,8 @@ public class UserController {
         return userService.editPassword(id, passwordChangeDto);
     }
 
-    @PostMapping("/{id}/editAccount")
-    public Mono<Void> editAccount(@PathVariable("id") Long id, @Validated @RequestBody UserUpdateDto userUpdateDto) {
+    @PostMapping("/{id}/editUser")
+    public Mono<Void> editUser(@PathVariable("id") Long id, @Validated @RequestBody UserUpdateDto userUpdateDto) {
         return userService.editUser(id, userUpdateDto);
     }
 
@@ -38,9 +38,8 @@ public class UserController {
         return userService.login(loginRequest);
     }
 
-    //TODO Добавить
-    /*@DeleteMapping("/delete")
-    public Mono<Void> delete() {
-        return userService.deleteUser();
-    }*/
+    @PostMapping("/delete/{id}")
+    public Mono<Void> delete(@PathVariable(name = "id") Long userId, @RequestBody String email) {
+        return userService.deleteUser(userId, email);
+    }
 }

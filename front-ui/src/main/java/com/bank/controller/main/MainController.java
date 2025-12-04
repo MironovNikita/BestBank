@@ -223,8 +223,8 @@ public class MainController {
     private void handleMainPage(WebSession session, Model model) {
         model.addAttribute("successPasswordMessage", session.getAttribute("successPasswordMessage"));
         model.addAttribute("passwordErrors", session.getAttribute("passwordErrors"));
-        model.addAttribute("successUpdateAccMessage", session.getAttribute("successUpdateAccMessage"));
-        model.addAttribute("accountErrors", session.getAttribute("accountErrors"));
+        model.addAttribute("successUpdateUserMessage", session.getAttribute("successUpdateUserMessage"));
+        model.addAttribute("userErrors", session.getAttribute("userErrors"));
         model.addAttribute("successCashMessage", session.getAttribute("successCashMessage"));
         model.addAttribute("cashErrors", session.getAttribute("cashErrors"));
         model.addAttribute("successTransferMessage", session.getAttribute("successTransferMessage"));
@@ -234,8 +234,8 @@ public class MainController {
 
         session.getAttributes().remove("successPasswordMessage");
         session.getAttributes().remove("passwordErrors");
-        session.getAttributes().remove("successUpdateAccMessage");
-        session.getAttributes().remove("accountErrors");
+        session.getAttributes().remove("successUpdateUserMessage");
+        session.getAttributes().remove("userErrors");
         session.getAttributes().remove("successCashMessage");
         session.getAttributes().remove("cashErrors");
         session.getAttributes().remove("successTransferMessage");

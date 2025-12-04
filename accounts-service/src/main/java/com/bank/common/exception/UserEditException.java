@@ -1,7 +1,7 @@
 package com.bank.common.exception;
 
-public class AccountEditException extends RuntimeException {
-  public AccountEditException() {
+public class UserEditException extends RuntimeException {
+  public UserEditException() {
     super("Введённые email/номер телефона уже существуют!");
   }
 }

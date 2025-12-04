@@ -9,6 +9,7 @@ import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,6 +17,7 @@ import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Controller
@@ -66,20 +68,20 @@ public class UserController {
                 });
     }
 
-    @PostMapping("/editAccount")
+    @PostMapping("/editUser")
     public Mono<String> editAccount(@ModelAttribute UserUpdateDto userUpdateDto, WebSession session) {
 
         return checkUserId(session)
                 .flatMap(userId -> accountsWebClient
                         .post()
-                        .uri("/users/{id}/editAccount", userId)
+                        .uri("/users/{id}/editUser", userId)
                         .bodyValue(userUpdateDto)
                         .exchangeToMono(resp -> {
                             if (resp.statusCode().is4xxClientError()) {
                                 return resp.bodyToMono(String.class)
                                         .map(msg -> {
                                             log.error("4хх ошибка при обращении (изменение аккаунта) к accounts-service: {}", msg);
-                                            session.getAttributes().put("accountErrors", List.of(msg));
+                                            session.getAttributes().put("userErrors", List.of(msg));
                                             return "redirect:/main";
                                         });
                             }
@@ -89,7 +91,7 @@ public class UserController {
                             }
                             return resp.releaseBody()
                                     .then(Mono.fromCallable(() -> {
-                                        session.getAttributes().put("successUpdateAccMessage", "Аккаунт был успешно обновлён");
+                                        session.getAttributes().put("successUpdateUserMessage", "Аккаунт был успешно обновлён");
                                         return "redirect:/main";
                                     }));
                         })
@@ -97,13 +99,50 @@ public class UserController {
                         .transformDeferred(RetryOperator.of(accountsServiceRetry))
                         .onErrorResume(ex -> {
                             log.error("5хх ошибка при обращении (изменение аккаунта) к accounts-service: {}", ex.getMessage());
-                            session.getAttributes().put("accountErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
+                            session.getAttributes().put("userErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
                             return Mono.just("redirect:/main");
                         })
                 )
                 .onErrorResume(ex -> {
                     log.error("Ошибка при проверке userId (изменение аккаунта)");
-                    session.getAttributes().put("accountErrors", List.of(ex.getMessage()));
+                    session.getAttributes().put("userErrors", List.of(ex.getMessage()));
+                    return Mono.just("redirect:/main");
+                });
+    }
+
+    @PostMapping("/deleteUser")
+    public Mono<String> deleteUser(WebSession session, Model model) {
+
+        return checkUserId(session)
+                .flatMap(userId ->
+                        accountsWebClient
+                                .post()
+                                .uri("/users/delete/{id}", userId)
+                                .bodyValue(Objects.requireNonNull(session.getAttribute("email")))
+                                .exchangeToMono(resp -> {
+                                    if (resp.statusCode().is4xxClientError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .map(msg -> {
+                                                    log.error("4хх ошибка при обращении (удаление аккаунта) к accounts-service: {}", msg);
+                                                    session.getAttributes().put("userErrors", List.of(msg));
+                                                    return "redirect:/main";
+                                                });
+                                    }
+                                    if (resp.statusCode().is5xxServerError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                                    }
+                                    return resp.releaseBody()
+                                            .then(session.invalidate())
+                                            .then(Mono.fromCallable(() -> {
+                                                model.addAttribute("successMessage", "Личный кабинет был успешно удалён. Возвращайтесь к нам снова!");
+                                                return "login";
+                                            }));
+                                })
+                )
+                .onErrorResume(ex -> {
+                    log.error("Ошибка при проверке userId (удаление аккаунта)");
+                    session.getAttributes().put("userErrors", List.of(ex.getMessage()));
                     return Mono.just("redirect:/main");
                 });
     }

@@ -268,14 +268,14 @@
                 <h2>Редактировать личные данные</h2>
 
                 <div class="message">
-                    <p style="color:red;" th:if="${accountErrors != null}"
-                       th:each="accountError : ${accountErrors}" th:text="${accountError}"></p>
+                    <p style="color:red;" th:if="${userErrors != null}"
+                       th:each="userError : ${userErrors}" th:text="${userError}"></p>
 
-                    <p style="color:green;" th:if="${successUpdateAccMessage != null}"
-                       th:text="${successUpdateAccMessage}"></p>
+                    <p style="color:green;" th:if="${successUpdateUserMessage != null}"
+                       th:text="${successUpdateUsercMessage}"></p>
                 </div>
 
-                <form method="post" th:action="@{'/editAccount'}">
+                <form method="post" th:action="@{'/editUser'}">
 
                     <div class="form-group">
                         <label>Email</label>
@@ -311,7 +311,7 @@
                         <button>Сохранить изменения</button>
                     </div>
                 </form>
-                <form method="post" th:action="@{'/user/delete'}" style="display:inline;">
+                <form method="post" th:action="@{/deleteUser}" style="display:inline;">
                     <input type="hidden" name="id" th:value="${session.id}"/>
                     <button style="background:#dc2626;">Удалить личный кабинет</button>
                 </form>

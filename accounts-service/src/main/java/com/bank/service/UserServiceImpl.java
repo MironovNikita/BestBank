@@ -2,6 +2,7 @@ package com.bank.service;
 
 import com.bank.common.exception.*;
 import com.bank.common.mapper.UserMapper;
+import com.bank.dto.account.AccountListDto;
 import com.bank.dto.user.UserUpdateDto;
 import com.bank.dto.user.RegisterUserRequest;
 import com.bank.dto.user.UserPasswordChangeDto;
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final SecureBase64Converter converter;
 
@@ -143,11 +145,39 @@ public class UserServiceImpl implements UserService {
                             })
                             .onErrorMap(ex -> {
                                 log.error("Возникло исключение при обновлении данных: {}", ex.getMessage());
-                                return new AccountEditException();
+                                return new UserEditException();
                             });
                 })
                 .doOnError(error -> log.error("Ошибка обновления данных для пользователя с ID {}: {}", id, error.getMessage()))
                 .then();
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteUser(Long userId, String email) {
+
+        return accountService.getUserAccounts(userId)
+                .collectList()
+                .flatMap(accounts -> {
+                    for (AccountListDto account : accounts) {
+                        if (account.getBalance().longValue() > 0) {
+                            log.warn("Пользователь с ID {} не был удалён. Есть положительный баланс на одном из счетов: {}", userId, account.getCurrency());
+                            return Mono.error(new UserDeleteException("У вас есть счёт (%s) с положительным балансом. Удаление личного кабинета невозможно".formatted(account.getCurrency())));
+                        }
+                    }
+
+                    return userRepository.deleteById(userId)
+                            .doOnSuccess(v -> {
+                                log.info("Пользователь с ID {} был успешно удалён.", userId);
+
+                                String userEmail = converter.decrypt(email);
+                                notificationService.sendNotification(userEmail, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
+                                        .subscribeOn(Schedulers.boundedElastic())
+                                        .doOnError(ex -> logEmailError(userEmail, ex.getMessage()))
+                                        .subscribe();
+                            })
+                            .onErrorMap(ex -> new ObjectNotFoundException("Пользователь", userId));
+                });
     }
 
     private boolean checkField(String field) {
