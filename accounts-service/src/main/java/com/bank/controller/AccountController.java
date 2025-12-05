@@ -1,11 +1,9 @@
 package com.bank.controller;
 
-import com.bank.dto.account.AccountCreateDto;
-import com.bank.dto.account.AccountDeleteDto;
-import com.bank.dto.account.AccountEditDto;
-import com.bank.dto.account.AccountListDto;
+import com.bank.dto.account.*;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
+import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -49,22 +47,14 @@ public class AccountController {
     public Mono<Void> editBalance(@PathVariable(name = "id") Long accountId, @Validated @RequestBody UpdateBalanceRq updateBalanceRq) {
         return accountService.updateBalance(accountId, updateBalanceRq);
     }
-/*
-    //TODO Переделать
-    @GetMapping("/{id}")
-    public Flux<AccountListDto> getAllAccounts(@PathVariable(name = "id") Long requestedId) {
-        return accountService.getAllAccounts(requestedId);
-    }
 
-    //TODO Переделать
-
-
-    //TODO Переделать
-
-
-    //TODO Переделать
     @PostMapping("/transfer")
     public Mono<Void> transfer(@Validated @RequestBody TransferOperationDto transferOperationDto) {
         return accountService.transfer(transferOperationDto);
-    }*/
+    }
+
+    @GetMapping("/{id}")
+    public Flux<AccountOtherListDto> getAllOtherAccounts(@PathVariable(name = "id") Long userRequestedId) {
+        return accountService.getAllOtherAccounts(userRequestedId);
+    }
 }

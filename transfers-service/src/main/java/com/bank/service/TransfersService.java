@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface TransfersService {
 
-    Mono<Void> operateTransfer(TransferOperationDto transferOperationDto);
+    Mono<Void> operateTransfer(TransferOperationDto dto);
 }

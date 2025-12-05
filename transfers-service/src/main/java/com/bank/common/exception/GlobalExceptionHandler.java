@@ -37,6 +37,14 @@ public class GlobalExceptionHandler {
         return Mono.just(e.getMessage());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<String> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.error("Возникло IllegalArgumentException: {}", e.getMessage(), e);
+
+        return Mono.just(e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Mono<String> handleException(Exception e) {

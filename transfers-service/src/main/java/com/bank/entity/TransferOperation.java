@@ -5,6 +5,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Data
 @Table("transfers")
 public class TransferOperation {
@@ -15,5 +17,5 @@ public class TransferOperation {
     private Long accountIdFrom;
     @Column("account_id_to")
     private Long accountIdTo;
-    private Long amount;
+    private BigDecimal amount;
 }

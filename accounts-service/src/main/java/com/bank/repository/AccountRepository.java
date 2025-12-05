@@ -1,6 +1,7 @@
 package com.bank.repository;
 
 import com.bank.dto.account.AccountListDto;
+import com.bank.dto.account.AccountOtherListDto;
 import com.bank.entity.Account;
 import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
@@ -48,11 +49,11 @@ public interface AccountRepository extends R2dbcRepository<Account, Long>, Accou
     @Modifying
     Mono<Void> updateAccountBalance(@Param("id") Long id, @Param("balance") BigDecimal balance);
 
-    /*@Query("""
-            SELECT id, name, surname, phone FROM accounts
-            WHERE id != :id
+    @Query("""
+            SELECT a.id, a.owner_id, a.currency, u.name, u.surname, u.phone FROM accounts a
+            LEFT JOIN users u ON a.owner_id = u.id
+            WHERE a.owner_id != :id
+            ORDER BY owner_id
             """)
-    Flux<AccountListDto> getAllAccountsForMainPage(@Param("id") Long id);
-
-    */
+    Flux<AccountOtherListDto> getAllAccountsForMainPage(@Param("id") Long id);
 }

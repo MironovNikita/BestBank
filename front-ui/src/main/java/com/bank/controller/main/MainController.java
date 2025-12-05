@@ -1,6 +1,7 @@
 package com.bank.controller.main;
 
 import com.bank.dto.account.AccountListDto;
+import com.bank.dto.account.AccountOtherListDto;
 import com.bank.dto.currency.Currency;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
@@ -158,20 +159,18 @@ public class MainController {
 
         return checkUserId(session)
                 .flatMap(userId -> {
-                    /*Mono<List<AccountListDto>> accountsMono = accountsWebClient
+                    Mono<List<AccountOtherListDto>> otherAccounts = accountsWebClient
                             .get()
                             .uri("/accounts/{id}", userId)
                             .retrieve()
-                            .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(new RuntimeException(body))))
-                            .bodyToFlux(AccountListDto.class)
+                            .bodyToFlux(AccountOtherListDto.class)
                             .collectList()
                             .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
                             .transformDeferred(RetryOperator.of(accountsServiceRetry))
                             .onErrorResume(ex -> {
                                 log.error("Не удалось получить список аккаунтов: {}", ex.getMessage());
                                 return Mono.just(List.of());
-                            });*/
+                            });
 
                     Mono<List<AccountListDto>> userAccounts = accountsWebClient
                             .get()
@@ -186,7 +185,7 @@ public class MainController {
                                 return Mono.just(List.of());
                             });
 
-                    return Mono.zip(userAccounts, Mono.just(5))
+                    return Mono.zip(userAccounts, otherAccounts)
                             .flatMap(tuple -> {
                                 var openedAccounts = tuple.getT1();
                                 var openedCurrencies = openedAccounts
@@ -200,8 +199,8 @@ public class MainController {
                                 model.addAttribute("userAccounts", openedAccounts);
                                 model.addAttribute("userName", session.getAttribute("userName"));
                                 model.addAttribute("availableCurrencies", availableCurrencies);
-                                var balance = tuple.getT2();
-                                //model.addAttribute("balance", balance == Long.MIN_VALUE ? "Сервер временно недоступен. Попробуйте позже" : balance);
+                                var openedOthers = tuple.getT2();
+                                model.addAttribute("otherAccounts", openedOthers);
                                 return Mono.just("main");
                             });
                 })
@@ -229,6 +228,8 @@ public class MainController {
         model.addAttribute("cashErrors", session.getAttribute("cashErrors"));
         model.addAttribute("successTransferMessage", session.getAttribute("successTransferMessage"));
         model.addAttribute("transferErrors", session.getAttribute("transferErrors"));
+        model.addAttribute("selfTransferSuccess", session.getAttribute("selfTransferSuccess"));
+        model.addAttribute("selfTransferErrors", session.getAttribute("selfTransferErrors"));
         model.addAttribute("accountListSuccess", session.getAttribute("accountListSuccess"));
         model.addAttribute("accountListErrors", session.getAttribute("accountListErrors"));
 
@@ -240,6 +241,8 @@ public class MainController {
         session.getAttributes().remove("cashErrors");
         session.getAttributes().remove("successTransferMessage");
         session.getAttributes().remove("transferErrors");
+        session.getAttributes().remove("selfTransferSuccess");
+        session.getAttributes().remove("selfTransferErrors");
         session.getAttributes().remove("accountListSuccess");
         session.getAttributes().remove("accountListErrors");
     }

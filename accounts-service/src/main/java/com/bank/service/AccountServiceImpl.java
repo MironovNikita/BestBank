@@ -2,12 +2,10 @@ package com.bank.service;
 
 import com.bank.common.exception.AccountOperationException;
 import com.bank.common.mapper.AccountMapper;
-import com.bank.dto.account.AccountCreateDto;
-import com.bank.dto.account.AccountDeleteDto;
-import com.bank.dto.account.AccountEditDto;
-import com.bank.dto.account.AccountListDto;
+import com.bank.dto.account.*;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
+import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.Account;
 import com.bank.repository.AccountRepository;
 import com.bank.security.SecureBase64Converter;
@@ -123,23 +121,18 @@ public class AccountServiceImpl implements AccountService {
                 .doOnSuccess(v -> log.info("Баланс для аккаунта с ID {} был успешно изменён", accountId));
     }
 
-    /*@Override
-    public Flux<AccountListDto> getAllAccounts(Long requestedId) {
-        return accountRepository.getAllAccountsForMainPage(requestedId);
-    }
-
-
-
-
-
     @Override
     @Transactional
     public Mono<Void> transfer(TransferOperationDto transferOperationDto) {
         return accountRepository.transfer(transferOperationDto)
-                .doOnSuccess(v -> log.info("Перевод с аккаунта с ID {} на аккаунт с ID {} успешно совершён.",
+                .doOnSuccess(v -> log.info("Перевод со счёта с ID {} на счёт с ID {} успешно совершён.",
                         transferOperationDto.getAccountIdFrom(), transferOperationDto.getAccountIdTo()));
-    }*/
+    }
 
+    @Override
+    public Flux<AccountOtherListDto> getAllOtherAccounts(Long requestedId) {
+        return accountRepository.getAllAccountsForMainPage(requestedId);
+    }
 
     private void logEmailError(String email, String exceptionMessage) {
         log.error("Ошибка при отправке уведомления для {}: {}", email, exceptionMessage);

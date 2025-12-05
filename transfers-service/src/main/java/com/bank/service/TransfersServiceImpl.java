@@ -17,6 +17,7 @@ import static com.bank.dto.email.EmailTemplates.TRANSFER_OPERATION_SUBJECT;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TransfersServiceImpl implements TransfersService {
 
     private final TransfersRepository transfersRepository;
@@ -26,8 +27,8 @@ public class TransfersServiceImpl implements TransfersService {
     private final NotificationsServiceClient notificationsServiceClient;
 
     @Override
-    @Transactional
     public Mono<Void> operateTransfer(TransferOperationDto dto) {
+        checkAccountsId(dto.getAccountIdFrom(), dto.getAccountIdTo());
         TransferOperation operation = transferOperationMapper.toTransferOperation(dto);
 
         return accountsServiceClient.transfer(dto)
@@ -47,5 +48,9 @@ public class TransfersServiceImpl implements TransfersService {
                             dto.getAccountIdFrom(), dto.getAccountIdTo(), ex.getMessage());
                     return Mono.error(ex);
                 });
+    }
+
+    private void checkAccountsId(Long accountIdFrom, Long accountIdTo) {
+        if (accountIdFrom.equals(accountIdTo)) throw new IllegalArgumentException("Нельзя перевести средства. Счёт списания идентичен счёту получения");
     }
 }

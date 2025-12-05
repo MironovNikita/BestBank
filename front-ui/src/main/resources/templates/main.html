@@ -207,6 +207,12 @@
             max-width: 2000px;
         }
 
+        .transfer-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
     </style>
 </head>
 
@@ -314,6 +320,54 @@
                 <form method="post" th:action="@{/deleteUser}" style="display:inline;">
                     <input type="hidden" name="id" th:value="${session.id}"/>
                     <button style="background:#dc2626;">Удалить личный кабинет</button>
+                </form>
+            </div>
+
+            <!-- Переводы между своими счетами -->
+            <div class="card transfer-card">
+                <h2>Перевод между своими счетами</h2>
+
+                <div class="message">
+                    <p style="color:red;" th:if="${selfTransferErrors != null}" th:each="self : ${selfTransferErrors}" th:text="${self}"></p>
+                    <p style="color:green;" th:if="${selfTransferSuccess != null}" th:text="${selfTransferSuccess}"></p>
+                </div>
+
+                <form method="post" th:action="@{/transfer/self}">
+                    <div class="form-group">
+                        <label>Счёт списания</label>
+                        <select name="accountIdFrom" required>
+                            <option value="">Выберите счёт для списания...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:text="${acc.title}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Счёт зачисления</label>
+                        <select name="accountIdTo" required>
+                            <option value="">Выберите счёт для зачисления...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:text="${acc.title}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Сумма</label>
+                        <input id="selfAmountInput"
+                               name="amount"
+                               type="number"
+                               step="0.01"
+                               min="0.01"
+                               placeholder="0.01"
+                               pattern="^\d+(\.\d{1,2})?$"
+                               required/>
+                    </div>
+
+                    <div class="button-group">
+                        <button>Перевести</button>
+                    </div>
                 </form>
             </div>
 
@@ -444,31 +498,48 @@
                 </form>
             </div>
 
-            <!-- Перевод -->
-            <div class="card">
-                <h2>Перевод</h2>
+            <!-- Переводы на другие счета -->
+            <div class="card transfer-card">
+                <h2>Перевод на другой счёт</h2>
 
                 <div class="message">
-                    <p style="color:red;" th:if="${transferErrors != null}" th:each="transferError : ${transferErrors}"
-                       th:text="${transferError}"></p>
-
-                    <p style="color:green;" th:if="${successTransferMessage != null}"
-                       th:text="${successTransferMessage}"></p>
+                    <p style="color:red;" th:if="${transferErrors != null}" th:each="err : ${transferErrors}" th:text="${err}"></p>
+                    <p style="color:green;" th:if="${successTransferMessage != null}" th:text="${successTransferMessage}"></p>
                 </div>
 
-                <form method="post" th:action="@{'/transfer'}">
+                <form method="post" th:action="@{/transfer/other}">
                     <div class="form-group">
-                        <label>Сумма</label>
-                        <input name="transferValue" type="number" required/>
+                        <label>Счёт списания</label>
+                        <select name="accountIdFrom" required>
+                            <option value="">Выберите счёт для перевода...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:data-balance="${acc.balance}"
+                                    th:text="${acc.title}"></option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Кому</label>
-                        <select name="accountTo">
-                            <option th:each="account : ${accounts}" th:value="${account.getId()}"
-                                    th:text="${account.getName()} + ' ' + ${account.getSurname()} + ' Тел.: ' + ${account.getPhone()}"></option>
+                        <label>Счёт получателя</label>
+                        <select name="accountIdTo" required>
+                            <option value="">Выберите счёт получателя...</option>
+                            <option th:each="acc : ${otherAccounts}"
+                                    th:value="${acc.id}" th:text="${acc.name} + ' ' + ${acc.surname} + ' (' + ${acc.phone} + ') ' + ${acc.currency} "></option>
                         </select>
                     </div>
+
+                    <div class="form-group">
+                        <label>Сумма</label>
+                        <input id="otherAmountInput"
+                               name="amount"
+                               type="number"
+                               step="0.01"
+                               min="0.01"
+                               placeholder="0.01"
+                               pattern="^\d+(\.\d{1,2})?$"
+                               required/>
+                    </div>
+
 
                     <div class="button-group">
                         <button>Перевести</button>
@@ -521,3 +592,14 @@
     updateInfo();
 </script>
 
+<script>
+    document.getElementById('selfAmountInput').addEventListener('change', function (e) {
+        this.value = this.value.replace(',', '.');
+    });
+</script>
+
+<script>
+    document.getElementById('otherAmountInput').addEventListener('change', function (e) {
+        this.value = this.value.replace(',', '.');
+    });
+</script>
