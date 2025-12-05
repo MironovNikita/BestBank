@@ -6,6 +6,8 @@ import com.bank.dto.account.AccountCreateDto;
 import com.bank.dto.account.AccountDeleteDto;
 import com.bank.dto.account.AccountEditDto;
 import com.bank.dto.account.AccountListDto;
+import com.bank.dto.cash.BalanceDto;
+import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.entity.Account;
 import com.bank.repository.AccountRepository;
 import com.bank.security.SecureBase64Converter;
@@ -105,16 +107,11 @@ public class AccountServiceImpl implements AccountService {
                 .then();
     }
 
-    /*@Override
-    public Flux<AccountListDto> getAllAccounts(Long requestedId) {
-        return accountRepository.getAllAccountsForMainPage(requestedId);
-    }
-
     @Override
-    public Mono<BalanceDto> getBalance(Long accountId) {
+    public Mono<BalanceDto> getAccountBalance(Long accountId) {
         return accountRepository.getAccountBalance(accountId)
                 .flatMap(balance -> {
-                    log.info("Был запрошен баланс для аккаунта с ID {}", accountId);
+                    log.info("Был запрошен баланс для счёта с ID {}", accountId);
                     return Mono.just(new BalanceDto(accountId, balance));
                 });
     }
@@ -125,6 +122,15 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.updateAccountBalance(accountId, updateBalanceRq.getBalance())
                 .doOnSuccess(v -> log.info("Баланс для аккаунта с ID {} был успешно изменён", accountId));
     }
+
+    /*@Override
+    public Flux<AccountListDto> getAllAccounts(Long requestedId) {
+        return accountRepository.getAllAccountsForMainPage(requestedId);
+    }
+
+
+
+
 
     @Override
     @Transactional

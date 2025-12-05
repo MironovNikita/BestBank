@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.math.BigDecimal;
+
 import static com.bank.dto.email.EmailTemplates.CASH_OPERATION_SUBJECT;
 import static com.bank.dto.email.EmailTemplates.CASH_OPERATION_TEXT;
 import static com.bank.entity.OperationType.GET;
@@ -29,15 +31,14 @@ public class CashServiceImpl implements CashService {
     private final AccountsServiceClient accountsServiceClient;
     private final NotificationsServiceClient notificationsServiceClient;
 
-
     @Override
     @Transactional
     public Mono<Void> operateCash(CashOperationDto cashOperationDto) {
         CashOperation cashOperation = cashOperationMapper.toCashOperation(cashOperationDto);
 
-        return accountsServiceClient.getCurrentBalance(cashOperation.getAccountId())
+        return accountsServiceClient.getCurrentAccountBalance(cashOperation.getAccountId())
                 .flatMap(balance -> calculateNewBalance(balance, cashOperation))
-                .flatMap(newBalance -> accountsServiceClient.updateRemoteBalance(newBalance, cashOperationDto.getAccountId())
+                .flatMap(newBalance -> accountsServiceClient.updateRemoteBalance(newBalance, cashOperationDto.getId())
                         .then(saveOperation(cashOperation)))
                 .doOnSuccess(v -> {
                     log.info("Операция с наличными для пользователя {} выполнена.", cashOperation.getAccountId());
@@ -51,16 +52,16 @@ public class CashServiceImpl implements CashService {
                 .then();
     }
 
-    private Mono<Long> calculateNewBalance(Long currentBalance, CashOperation cashOperation) {
-        long amount = cashOperation.getAmount();
+    private Mono<BigDecimal> calculateNewBalance(BigDecimal currentBalance, CashOperation cashOperation) {
+        BigDecimal amount = cashOperation.getAmount();
 
         if (cashOperation.getOperation() == GET) {
-            if (amount > currentBalance) {
+            if (amount.compareTo(currentBalance) > 0) {
                 return Mono.error(new NotEnoughFundsException(currentBalance));
             }
-            return Mono.just(currentBalance - amount);
+            return Mono.just(currentBalance.subtract(amount));
         } else if (cashOperation.getOperation() == PUT) {
-            return Mono.just(currentBalance + amount);
+            return Mono.just(currentBalance.add(amount));
         } else {
             return Mono.error(new RuntimeException("Неизвестный тип операции"));
         }

@@ -412,15 +412,34 @@
                     <p style="color:green;" th:if="${successCashMessage != null}" th:text="${successCashMessage}"></p>
                 </div>
 
-                <form method="post" th:action="@{'/cash'}">
+                <form method="post" th:action="@{/cash}">
                     <div class="form-group">
                         <label>Сумма</label>
                         <input name="amount" type="number" required/>
                     </div>
 
+                    <div th:if="${userAccounts != null}" class="form-group">
+                        <label>Мои счета</label>
+
+                        <select name="id" id="accountsSelect" required>
+                            <option value="">Выберите счёт...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:data-owner="${acc.ownerId}"
+                                    th:data-currency="${acc.currency}"
+                                    th:data-balance="${acc.balance}"
+                                    th:text="${acc.title}">
+                            </option>
+                        </select>
+
+                        <input type="hidden" name="ownerId" id="ownerIdHidden">
+
+                        <div id="selectedInfo" style="margin-top:8px; font-size:15px;"></div>
+                    </div>
+
                     <div class="button-group">
-                        <button name="action" value="PUT">Положить</button>
-                        <button name="action" value="GET">Снять</button>
+                        <button name="operation" value="PUT">Положить</button>
+                        <button name="operation" value="GET">Снять</button>
                     </div>
                 </form>
             </div>
@@ -475,3 +494,30 @@
         if (input) input.value = title;
     }
 </script>
+
+<script>
+    const select = document.getElementById("accountsSelect");
+    const info = document.getElementById("selectedInfo");
+    const ownerHidden = document.getElementById("ownerIdHidden");
+
+    function updateInfo() {
+        const opt = select.options[select.selectedIndex];
+
+        if (!opt || opt.value === "") {
+            info.innerHTML = "";
+            ownerHidden.value = "";
+            return;
+        }
+
+        info.innerHTML = `
+            Валюта: <b>${opt.dataset.currency}</b> |
+            Баланс: <b>${opt.dataset.balance}</b>
+        `;
+
+        ownerHidden.value = opt.dataset.owner;
+    }
+
+    select.addEventListener("change", updateInfo);
+    updateInfo();
+</script>
+

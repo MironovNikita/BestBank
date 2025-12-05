@@ -4,6 +4,8 @@ import com.bank.dto.account.AccountCreateDto;
 import com.bank.dto.account.AccountDeleteDto;
 import com.bank.dto.account.AccountEditDto;
 import com.bank.dto.account.AccountListDto;
+import com.bank.dto.cash.BalanceDto;
+import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +39,16 @@ public class AccountController {
     public Mono<Void> editAccount(@Validated @RequestBody AccountEditDto dto) {
         return accountService.editAccount(dto);
     }
+
+    @GetMapping("/{id}/balance")
+    public Mono<BalanceDto> getBalance(@PathVariable(name = "id") Long accountId) {
+        return accountService.getAccountBalance(accountId);
+    }
+
+    @PostMapping("/{id}/balance")
+    public Mono<Void> editBalance(@PathVariable(name = "id") Long accountId, @Validated @RequestBody UpdateBalanceRq updateBalanceRq) {
+        return accountService.updateBalance(accountId, updateBalanceRq);
+    }
 /*
     //TODO Переделать
     @GetMapping("/{id}")
@@ -45,16 +57,10 @@ public class AccountController {
     }
 
     //TODO Переделать
-    @GetMapping("/{id}/balance")
-    public Mono<BalanceDto> getBalance(@PathVariable(name = "id") Long accountId) {
-        return accountService.getBalance(accountId);
-    }
+
 
     //TODO Переделать
-    @PostMapping("/{id}/balance")
-    public Mono<Void> editBalance(@PathVariable(name = "id") Long accountId, @Validated @RequestBody UpdateBalanceRq updateBalanceRq) {
-        return accountService.updateBalance(accountId, updateBalanceRq);
-    }
+
 
     //TODO Переделать
     @PostMapping("/transfer")

@@ -1,7 +1,9 @@
 package com.bank.common.exception;
 
+import java.math.BigDecimal;
+
 public class NotEnoughFundsException extends RuntimeException {
-    public NotEnoughFundsException(Long amount) {
-        super("На вашем счёте недостаточно средств: %d".formatted(amount));
+    public NotEnoughFundsException(BigDecimal amount) {
+        super("На вашем счёте недостаточно средств: " + amount);
     }
 }

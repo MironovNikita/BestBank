@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,8 +24,8 @@ public class AccountsServiceClientImpl implements AccountsServiceClient {
     private final Retry accountsServiceRetry;
     private final CircuitBreaker accountsServiceCB;
 
-
-    public Mono<Long> getCurrentBalance(Long accountId) {
+    @Override
+    public Mono<BigDecimal> getCurrentAccountBalance(Long accountId) {
         return accountsWebClient
                 .get()
                 .uri("/accounts/{id}/balance", accountId)
@@ -50,7 +52,8 @@ public class AccountsServiceClientImpl implements AccountsServiceClient {
                 });
     }
 
-    public Mono<Void> updateRemoteBalance(Long newBalance, Long accountId) {
+    @Override
+    public Mono<Void> updateRemoteBalance(BigDecimal newBalance, Long accountId) {
         UpdateBalanceRq updateBalanceRq = new UpdateBalanceRq(newBalance);
 
         return accountsWebClient
