@@ -21,16 +21,16 @@ public class CurrencyRateGeneratorServiceImpl {
 
     private static final Currency BASE_CURRENCY = Currency.RUB;
     private static final BigDecimal MIN_RATE = new BigDecimal("0.01");
-    private static final BigDecimal MAX_RATE = new BigDecimal("3.0");
+    private static final BigDecimal MAX_RATE = new BigDecimal("10.0");
 
     private final ExchangeServiceClientImpl exchangeServiceClient;
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 1800000)
     public void generateCurrencyRate() {
 
         var rnd = ThreadLocalRandom.current();
         Map<Currency, BigDecimal> rates = new HashMap<>();
-        rates.put(Currency.RUB, BigDecimal.valueOf(1.00));
+        rates.put(Currency.RUB, BigDecimal.ONE);
 
         Arrays.stream(Currency.values())
                 .filter(currency -> !BASE_CURRENCY.equals(currency))

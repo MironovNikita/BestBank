@@ -58,4 +58,20 @@ public class WebClientConfig {
                 .filter(oauth)
                 .build();
     }
+
+    @Bean
+    public WebClient exchangeServiceWebClient(
+            ReactiveClientRegistrationRepository clients,
+            ServerOAuth2AuthorizedClientRepository authClients
+    ) {
+        ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
+                new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
+
+        oauth.setDefaultClientRegistrationId("exchange-service");
+        return loadBalancedWebClientBuilder()
+                .clone()
+                .baseUrl("lb://exchange-service")
+                .filter(oauth)
+                .build();
+    }
 }

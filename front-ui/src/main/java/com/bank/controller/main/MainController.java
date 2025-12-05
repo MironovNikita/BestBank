@@ -3,6 +3,7 @@ package com.bank.controller.main;
 import com.bank.dto.account.AccountListDto;
 import com.bank.dto.account.AccountOtherListDto;
 import com.bank.dto.currency.Currency;
+import com.bank.dto.currency.CurrencyRateDto;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
 import com.bank.dto.user.RegisterUserRequest;
@@ -14,6 +15,7 @@ import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -39,11 +41,14 @@ import java.util.stream.Collectors;
 public class MainController {
 
     private final WebClient accountsWebClient;
+    private final WebClient exchangeServiceWebClient;
     private final SecureBase64Converter converter;
     private final ReactiveAuthenticationManager authenticationManager;
     private final ServerSecurityContextRepository securityContextRepository;
     private final Retry accountsServiceRetry;
     private final CircuitBreaker accountsServiceCB;
+    private final Retry exchangeServiceRetry;
+    private final CircuitBreaker exchangeServiceCB;
 
     @GetMapping("/register")
     public Mono<String> registerPage() {
@@ -185,7 +190,26 @@ public class MainController {
                                 return Mono.just(List.of());
                             });
 
-                    return Mono.zip(userAccounts, otherAccounts)
+                    Mono<List<CurrencyRateDto>> currencies = exchangeServiceWebClient
+                            .get()
+                            .uri("/exchange/rates")
+                            .retrieve()
+                            .onStatus(HttpStatusCode::is4xxClientError,
+                                    resp -> resp.bodyToMono(String.class)
+                                            .flatMap(body -> {
+                                                model.addAttribute("currencyErrors", body);
+                                                return Mono.error(new RuntimeException(body));
+                                            }))
+                            .bodyToFlux(CurrencyRateDto.class)
+                            .transformDeferred(CircuitBreakerOperator.of(exchangeServiceCB))
+                            .transformDeferred(RetryOperator.of(exchangeServiceRetry))
+                            .collectList()
+                            .onErrorResume(ex -> {
+                                log.error("Не удалось получить актуальные курсы валют: {}", ex.getMessage());
+                                return Mono.just(List.of());
+                            });
+
+                    return Mono.zip(userAccounts, otherAccounts, currencies)
                             .flatMap(tuple -> {
                                 var openedAccounts = tuple.getT1();
                                 var openedCurrencies = openedAccounts
@@ -201,6 +225,8 @@ public class MainController {
                                 model.addAttribute("availableCurrencies", availableCurrencies);
                                 var openedOthers = tuple.getT2();
                                 model.addAttribute("otherAccounts", openedOthers);
+                                var currencyRates = tuple.getT3();
+                                model.addAttribute("currencyRates", currencyRates);
                                 return Mono.just("main");
                             });
                 })

@@ -37,4 +37,14 @@ public class Resilience4jConfig {
     public CircuitBreaker transfersServiceCB() {
         return CircuitBreaker.ofDefaults("transfersServiceCB");
     }
+
+    @Bean
+    public Retry exchangeServiceRetry() {
+        return Retry.ofDefaults("exchangeServiceRetry");
+    }
+
+    @Bean
+    public CircuitBreaker exchangeServiceCB() {
+        return CircuitBreaker.ofDefaults("exchangeServiceCB");
+    }
 }
