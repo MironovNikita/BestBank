@@ -51,6 +51,21 @@ public class WebClientConfig {
     }
 
     @Bean
+    public WebClient exchangeWebClient(
+            ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
+            WebClient.Builder builder
+    ) {
+        var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+        oauth.setDefaultOAuth2AuthorizedClient(true);
+        oauth.setDefaultClientRegistrationId("exchange-service");
+
+        return builder
+                .baseUrl("lb://exchange-service")
+                .filter(oauth)
+                .build();
+    }
+
+    @Bean
     public ReactiveOAuth2AuthorizedClientManager authorizedClientManager(
             ReactiveClientRegistrationRepository registrations,
             ReactiveOAuth2AuthorizedClientService clientService

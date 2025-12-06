@@ -14,13 +14,6 @@
             padding: 40px 0;
         }
 
-        .container {
-            width: 800px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
         .card {
             background-color: #ffffff;
             border-radius: 16px;
@@ -28,7 +21,7 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         h2 {
@@ -98,18 +91,18 @@
         }
 
         .message {
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 600;
         }
 
         .success {
             color: #16a34a;
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .error {
             color: #dc2626;
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .logout-form {
@@ -211,6 +204,11 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            gap: 20px;
+        }
+
+        .self-transfer-form .form-group:first-child {
+            margin-top: 15px;
         }
 
         /* Курсы валют */
@@ -232,6 +230,7 @@
         .ticker-inner {
             display: inline-block;
             animation: scroll 12s linear infinite;
+            font-size: 15px;
         }
 
         .ticker-inner span {
@@ -259,6 +258,14 @@
             width: 100%;
             max-width: 2000px;
             margin: 0 auto 5px auto;
+        }
+
+        .currency-card.card {
+            gap: 5px;
+        }
+
+        .currency-card h2 {
+            margin-bottom: 5px;
         }
 
         .currency-wrapper {
@@ -410,28 +417,34 @@
                 <form method="post" th:action="@{/transfer/self}">
                     <div class="form-group">
                         <label>Счёт списания</label>
-                        <select name="accountIdFrom" required>
+                        <select name="accountIdFrom" id="accountIdFromSelf" required>
                             <option value="">Выберите счёт для списания...</option>
                             <option th:each="acc : ${userAccounts}"
                                     th:value="${acc.id}"
+                                    th:data-currency="${acc.currency}"
                                     th:text="${acc.title}"></option>
                         </select>
+
+                        <input type="hidden" name="currencyFrom" id="currencyFromSelf">
                     </div>
 
                     <div class="form-group">
                         <label>Счёт зачисления</label>
-                        <select name="accountIdTo" required>
+                        <select name="accountIdTo" id="accountIdToSelf" required>
                             <option value="">Выберите счёт для зачисления...</option>
                             <option th:each="acc : ${userAccounts}"
                                     th:value="${acc.id}"
+                                    th:data-currency="${acc.currency}"
                                     th:text="${acc.title}"></option>
                         </select>
+
+                        <input type="hidden" name="currencyTo" id="currencyToSelf">
                     </div>
 
                     <div class="form-group">
                         <label>Сумма</label>
                         <input id="selfAmountInput"
-                               name="amount"
+                               name="amountFrom"
                                type="number"
                                step="0.01"
                                min="0.01"
@@ -585,28 +598,33 @@
                 <form method="post" th:action="@{/transfer/other}">
                     <div class="form-group">
                         <label>Счёт списания</label>
-                        <select name="accountIdFrom" required>
+                        <select name="accountIdFrom" id="accountIdFromOther" required>
                             <option value="">Выберите счёт для перевода...</option>
                             <option th:each="acc : ${userAccounts}"
                                     th:value="${acc.id}"
-                                    th:data-balance="${acc.balance}"
+                                    th:data-currency="${acc.currency}"
                                     th:text="${acc.title}"></option>
                         </select>
+
+                        <input type="hidden" name="currencyFrom" id="currencyFromOther">
                     </div>
 
                     <div class="form-group">
                         <label>Счёт получателя</label>
-                        <select name="accountIdTo" required>
+                        <select name="accountIdTo" id="accountIdToOther" required>
                             <option value="">Выберите счёт получателя...</option>
                             <option th:each="acc : ${otherAccounts}"
-                                    th:value="${acc.id}" th:text="${acc.name} + ' ' + ${acc.surname} + ' (' + ${acc.phone} + ') ' + ${acc.currency} "></option>
+                                    th:value="${acc.id}" th:text="${acc.name} + ' ' + ${acc.surname} + ' (' + ${acc.phone} + ') ' + ${acc.currency} "
+                                    th:data-currency="${acc.currency}"></option>
                         </select>
+
+                        <input type="hidden" name="currencyTo" id="currencyToOther">
                     </div>
 
                     <div class="form-group">
                         <label>Сумма</label>
                         <input id="otherAmountInput"
-                               name="amount"
+                               name="amountFrom"
                                type="number"
                                step="0.01"
                                min="0.01"
@@ -677,4 +695,26 @@
     document.getElementById('otherAmountInput').addEventListener('change', function (e) {
         this.value = this.value.replace(',', '.');
     });
+</script>
+
+<script>
+    function bindCurrencySelect(selectId, hiddenId) {
+        const select = document.getElementById(selectId);
+        const hidden = document.getElementById(hiddenId);
+
+        if (!select || !hidden) return;
+
+        select.addEventListener("change", function () {
+            const selected = this.selectedOptions[0];
+            hidden.value = selected ? selected.dataset.currency : "";
+        });
+    }
+
+    // Для перевода между своими
+    bindCurrencySelect("accountIdFromSelf", "currencyFromSelf");
+    bindCurrencySelect("accountIdToSelf", "currencyToSelf");
+
+    // Для перевода на другой счёт
+    bindCurrencySelect("accountIdFromOther", "currencyFromOther");
+    bindCurrencySelect("accountIdToOther", "currencyToOther");
 </script>

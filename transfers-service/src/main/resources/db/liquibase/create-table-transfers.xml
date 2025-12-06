@@ -22,7 +22,16 @@
             <column name="account_id_to" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="amount" type="decimal(15,2)">
+            <column name="currency_from" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount_from" type="decimal(15,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_to" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount_to" type="decimal(15,2)">
                 <constraints nullable="false"/>
             </column>
             <column name="created" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">

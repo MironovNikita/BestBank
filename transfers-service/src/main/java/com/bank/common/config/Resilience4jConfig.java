@@ -40,4 +40,14 @@ public class Resilience4jConfig {
     public CircuitBreaker notificationsServiceCB() {
         return CircuitBreaker.ofDefaults("notificationsServiceCB");
     }
+
+    @Bean
+    public Retry exchangeServiceRetry() {
+        return Retry.ofDefaults("notificationsServiceRetry");
+    }
+
+    @Bean
+    public CircuitBreaker exchangeServiceCB() {
+        return CircuitBreaker.ofDefaults("notificationsServiceCB");
+    }
 }

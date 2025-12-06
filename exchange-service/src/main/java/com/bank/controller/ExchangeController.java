@@ -2,8 +2,10 @@ package com.bank.controller;
 
 import com.bank.dto.currency.Currency;
 import com.bank.dto.currency.CurrencyRateDto;
+import com.bank.dto.currency.ExchangeCountDto;
 import com.bank.service.ExchangeServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,5 +30,8 @@ public class ExchangeController {
         return exchangeService.getActualRates();
     }
 
-    //TODO Добавить расчёт в текущей сумме по курсам в другой валюте
+    @PostMapping("/recount")
+    public Mono<BigDecimal> recountAmount(@Validated @RequestBody ExchangeCountDto dto) {
+        return exchangeService.recountAmount(dto);
+    }
 }
