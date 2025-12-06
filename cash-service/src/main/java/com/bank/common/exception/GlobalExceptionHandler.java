@@ -1,5 +1,6 @@
 package com.bank.common.exception;
 
+import com.bank.exception.BlockerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +19,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Mono<String> handleNotEnoughFundsException(NotEnoughFundsException e) {
         log.error("Возникло NotEnoughFundsException: {}", e.getMessage(), e);
+
+        return Mono.just(e.getMessage());
+    }
+
+    @ExceptionHandler(BlockerException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<String> handleBlockerException(BlockerException e) {
+        log.error("Возникло BlockerException: {}", e.getMessage(), e);
 
         return Mono.just(e.getMessage());
     }

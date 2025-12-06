@@ -50,6 +50,20 @@ public class WebClientConfig {
     }
 
     @Bean
+    public WebClient blockerWebClient(
+            ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
+            WebClient.Builder builder) {
+        var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+        oauth.setDefaultOAuth2AuthorizedClient(true);
+        oauth.setDefaultClientRegistrationId("blocker-service");
+
+        return builder
+                .baseUrl("lb://blocker-service")
+                .filter(oauth)
+                .build();
+    }
+
+    @Bean
     public ReactiveOAuth2AuthorizedClientManager authorizedClientManager(
             ReactiveClientRegistrationRepository registrations,
             ReactiveOAuth2AuthorizedClientService clientService) {

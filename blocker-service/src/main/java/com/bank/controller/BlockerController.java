@@ -1,6 +1,6 @@
 package com.bank.controller;
 
-import com.bank.service.BlockerServiceImpl;
+import com.bank.service.BlockerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class BlockerController {
 
-    private final BlockerServiceImpl blockerService;
+    private final BlockerService blockerService;
 
     @GetMapping("/check")
     public Mono<Boolean> checkOperation() {

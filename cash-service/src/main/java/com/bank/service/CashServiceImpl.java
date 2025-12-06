@@ -4,6 +4,7 @@ import com.bank.common.exception.NotEnoughFundsException;
 import com.bank.common.mapper.CashOperationMapper;
 import com.bank.dto.cash.CashOperationDto;
 import com.bank.entity.CashOperation;
+import com.bank.exception.BlockerException;
 import com.bank.repository.CashRepository;
 import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;
@@ -30,26 +31,34 @@ public class CashServiceImpl implements CashService {
     private final SecureBase64Converter converter;
     private final AccountsServiceClient accountsServiceClient;
     private final NotificationsServiceClient notificationsServiceClient;
+    private final BlockerServiceClient blockerServiceClient;
 
     @Override
     @Transactional
     public Mono<Void> operateCash(CashOperationDto cashOperationDto) {
         CashOperation cashOperation = cashOperationMapper.toCashOperation(cashOperationDto);
 
-        return accountsServiceClient.getCurrentAccountBalance(cashOperation.getAccountId())
-                .flatMap(balance -> calculateNewBalance(balance, cashOperation))
-                .flatMap(newBalance -> accountsServiceClient.updateRemoteBalance(newBalance, cashOperationDto.getId())
-                        .then(saveOperation(cashOperation)))
-                .doOnSuccess(v -> {
-                    log.info("Операция с наличными для пользователя {} выполнена.", cashOperation.getAccountId());
+        return blockerServiceClient.checkOperation()
+                .flatMap(allowed -> {
+                    if (!allowed) {
+                        log.error("Операция с наличными была заблокирована для пользователя с ID {}", cashOperationDto.getOwnerId());
+                        return Mono.error(new BlockerException());
+                    }
+                    return accountsServiceClient.getCurrentAccountBalance(cashOperation.getAccountId())
+                            .flatMap(balance -> calculateNewBalance(balance, cashOperation))
+                            .flatMap(newBalance -> accountsServiceClient.updateRemoteBalance(newBalance, cashOperationDto.getId())
+                                    .then(saveOperation(cashOperation)))
+                            .doOnSuccess(v -> {
+                                log.info("Операция с наличными для пользователя {} выполнена.", cashOperation.getAccountId());
 
-                    String email = converter.decrypt(cashOperationDto.getEmail());
-                    notificationsServiceClient.sendNotification(email, CASH_OPERATION_SUBJECT, CASH_OPERATION_TEXT)
-                            .subscribeOn(Schedulers.boundedElastic())
-                            .doOnError(ex -> log.error("Ошибка при отправке уведомления для {}: {}", email, ex.getMessage()))
-                            .subscribe();
-                })
-                .then();
+                                String email = converter.decrypt(cashOperationDto.getEmail());
+                                notificationsServiceClient.sendNotification(email, CASH_OPERATION_SUBJECT, CASH_OPERATION_TEXT)
+                                        .subscribeOn(Schedulers.boundedElastic())
+                                        .doOnError(ex -> log.error("Ошибка при отправке уведомления для {}: {}", email, ex.getMessage()))
+                                        .subscribe();
+                            })
+                            .then();
+                });
     }
 
     private Mono<BigDecimal> calculateNewBalance(BigDecimal currentBalance, CashOperation cashOperation) {
