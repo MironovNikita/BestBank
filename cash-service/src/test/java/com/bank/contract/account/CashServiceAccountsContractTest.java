@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
+
 @ActiveProfiles("test")
 @WebFluxTest(CashController.class)
 @AutoConfigureStubRunner(
@@ -30,15 +32,15 @@ public class CashServiceAccountsContractTest {
     @Test
     @DisplayName("Проверка получения баланса")
     void testGetCurrentBalance() {
-        StepVerifier.create(accountsServiceClient.getCurrentBalance(3L))
-                .expectNext(1000L)
+        StepVerifier.create(accountsServiceClient.getCurrentAccountBalance(3L))
+                .expectNext(BigDecimal.valueOf(1000))
                 .verifyComplete();
     }
 
     @Test
     @DisplayName("Проверка обновления баланса")
     void testUpdateRemoteBalance() {
-        StepVerifier.create(accountsServiceClient.updateRemoteBalance(1000L, 3L))
+        StepVerifier.create(accountsServiceClient.updateRemoteBalance(BigDecimal.valueOf(1000), 3L))
                 .verifyComplete();
     }
 }

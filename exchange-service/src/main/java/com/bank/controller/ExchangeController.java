@@ -3,7 +3,7 @@ package com.bank.controller;
 import com.bank.dto.currency.Currency;
 import com.bank.dto.currency.CurrencyRateDto;
 import com.bank.dto.currency.ExchangeCountDto;
-import com.bank.service.ExchangeServiceImpl;
+import com.bank.service.ExchangeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ExchangeController {
 
-    private final ExchangeServiceImpl exchangeService;
+    private final ExchangeService exchangeService;
 
     @PostMapping("/update")
     public Mono<Void> updateCurrencyRates(@RequestBody Map<Currency, BigDecimal> rates) {

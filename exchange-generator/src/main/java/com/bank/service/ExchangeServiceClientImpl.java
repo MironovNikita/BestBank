@@ -17,14 +17,13 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ExchangeServiceClientImpl {
-
-    //TODO Интерфейс!
+public class ExchangeServiceClientImpl implements ExchangeServiceClient {
 
     private final WebClient exchangeServiceWebClient;
     private final Retry exchangeServiceRetry;
     private final CircuitBreaker exchangeServiceCB;
 
+    @Override
     public Mono<Void> updateExchange(Map<Currency, BigDecimal> rates) {
 
         return exchangeServiceWebClient

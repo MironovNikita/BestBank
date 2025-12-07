@@ -12,9 +12,11 @@ Contract.make {
         }
         body(
                 accountIdFrom: 3,
+                currencyFrom: "RUB",
                 accountIdTo: 2,
+                currencyTo: "EUR",
                 email: "test@test.ru",
-                amount: 1000
+                amountFrom: 200
         )
     }
     response {

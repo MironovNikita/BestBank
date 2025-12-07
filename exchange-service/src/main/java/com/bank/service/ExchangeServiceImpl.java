@@ -19,12 +19,12 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ExchangeServiceImpl {
-    //TODO Добавить интерфейс
+public class ExchangeServiceImpl implements ExchangeService {
 
     private static final Map<Currency, BigDecimal> RATES = new HashMap<>();
     private static final BigDecimal SPREAD = new BigDecimal("0.3");
 
+    @Override
     public Mono<Void> updateCurrencyRates(Map<Currency, BigDecimal> newRates) {
         return Mono.fromRunnable(() -> {
             synchronized (RATES) {
@@ -35,7 +35,7 @@ public class ExchangeServiceImpl {
         });
     }
 
-    //@Override
+    @Override
     public Flux<CurrencyRateDto> getActualRates() {
 
         if (RATES.isEmpty()) return Flux.error(new CurrencyException("Ошибка получения актуальных курсов валют. Расчёты временно приостановлены."));
@@ -55,7 +55,7 @@ public class ExchangeServiceImpl {
                 });
     }
 
-    //@Override
+    @Override
     public Mono<BigDecimal> recountAmount(ExchangeCountDto dto) {
 
         return Mono.fromCallable(() -> {

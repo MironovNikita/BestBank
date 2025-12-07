@@ -2,6 +2,7 @@ package com.bank.contract.account;
 
 import com.bank.contract.MockBeanConfig;
 import com.bank.controller.TransfersController;
+import com.bank.dto.currency.Currency;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.service.AccountsServiceClientImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +15,8 @@ import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureM
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
 
 @WebFluxTest(TransfersController.class)
 @AutoConfigureStubRunner(
@@ -31,7 +34,8 @@ public class TransfersServiceAccountsContractTest {
     @Test
     @DisplayName("Проверка вызова операции перевода")
     void testTransfer() {
-        TransferOperationDto dto = new TransferOperationDto(3L, 2L, "test@test.ru", 1000L);
+        TransferOperationDto dto =
+                new TransferOperationDto(3L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(1000), null);
 
         StepVerifier.create(accountsServiceClient.transfer(dto))
                 .verifyComplete();

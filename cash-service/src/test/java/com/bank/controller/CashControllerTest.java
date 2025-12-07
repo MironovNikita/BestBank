@@ -15,6 +15,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
@@ -32,7 +34,7 @@ public class CashControllerTest {
     @Test
     @DisplayName("Проверка метода операций с наличными")
     void shouldOperateCashCorrect() {
-        CashOperationDto dto = new CashOperationDto(1L, "GET", "test@test.ru", 1000L);
+        CashOperationDto dto = new CashOperationDto(1L, 3L, "GET", "test@test.ru", BigDecimal.valueOf(1000));
 
         when(cashService.operateCash(dto)).thenReturn(Mono.empty());
 
@@ -49,7 +51,7 @@ public class CashControllerTest {
     @Test
     @DisplayName("Проверка метода операций с наличными, если передана отрицательная сумма")
     void shouldNotOperateCashIfAmountIsNegative() {
-        CashOperationDto dto = new CashOperationDto(1L, "PUT", "test@test.ru", -1000L);
+        CashOperationDto dto = new CashOperationDto(1L, 3L, "GET", "test@test.ru", BigDecimal.valueOf(-1000));
 
         webClient.post()
                 .uri("/cash")

@@ -16,16 +16,16 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CurrencyRateGeneratorServiceImpl {
-    //TODO Добавить интерфейс
+public class CurrencyRateGeneratorServiceImpl implements CurrencyRateGeneratorService {
 
     private static final Currency BASE_CURRENCY = Currency.RUB;
     private static final BigDecimal MIN_RATE = new BigDecimal("0.01");
     private static final BigDecimal MAX_RATE = new BigDecimal("10.0");
 
-    private final ExchangeServiceClientImpl exchangeServiceClient;
+    private final ExchangeServiceClient exchangeServiceClient;
 
-    @Scheduled(fixedRate = 1800000)
+    @Override
+    @Scheduled(fixedRate = 60000)
     public void generateCurrencyRate() {
 
         var rnd = ThreadLocalRandom.current();
