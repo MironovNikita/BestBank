@@ -1,6 +1,7 @@
 package com.bank.contract;
 
 import com.bank.controller.AccountController;
+import com.bank.controller.UserController;
 import io.restassured.module.webtestclient.RestAssuredWebTestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ActiveProfiles("test")
 @AutoConfigureMessageVerifier
-@WebFluxTest(controllers = AccountController.class)
+@WebFluxTest(controllers = {AccountController.class, UserController.class})
 @Import({MockBeanConfig.class})
 public class BaseContractTestClass {
 

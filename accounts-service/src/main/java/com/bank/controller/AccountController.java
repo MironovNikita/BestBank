@@ -19,7 +19,7 @@ public class AccountController {
     private final AccountService accountService;
 
     @GetMapping("/currencies/{id}")
-    public Flux<AccountListDto> getUserCurrencies(@PathVariable(name = "id") Long userId) {
+    public Flux<AccountListDto> getUserAccounts(@PathVariable(name = "id") Long userId) {
         return accountService.getUserAccounts(userId);
     }
 

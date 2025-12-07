@@ -16,17 +16,20 @@ Contract.make {
         body(
                 [
                         [
-                            id: "1",
-                            phone: "89996665522",
-                            name: "Test",
-                            surname: "Test"
+                                id      : "1",
+                                ownerId : "2",
+                                currency: "RUB",
+                                name    : "Test",
+                                surname : "Test",
+                                phone   : "89996665522"
                         ],
                         [
-
-                            id: "2",
-                            phone: "89106665522",
-                            name: "Ne test",
-                            surname: "Ne test"
+                                id      : "2",
+                                ownerId : "2",
+                                currency: "EUR",
+                                name    : "Test",
+                                surname : "Test",
+                                phone   : "89996665522"
                         ]
                 ]
         )

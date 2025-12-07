@@ -3,10 +3,10 @@ package contracts
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Should login account")
+    description("Should login user")
     request {
         method POST()
-        url("/accounts/login") {}
+        url("/users/login") {}
         headers {
             contentType(applicationJson())
         }

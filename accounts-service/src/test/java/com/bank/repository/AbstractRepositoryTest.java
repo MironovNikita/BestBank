@@ -22,7 +22,7 @@ import java.util.Set;
 )
 @ContextConfiguration(classes = {LiquibaseTestConfig.class})
 public class AbstractRepositoryTest extends AbstractTestDatabaseInitialization {
-    protected static final Set<String> ALLOWED_TABLES = Set.of("accounts");
+    protected static final Set<String> ALLOWED_TABLES = Set.of("accounts, users");
 
     @Autowired
     protected DatabaseClient databaseClient;

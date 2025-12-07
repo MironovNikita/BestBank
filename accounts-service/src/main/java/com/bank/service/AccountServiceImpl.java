@@ -17,6 +17,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.math.BigDecimal;
+
 import static com.bank.dto.email.EmailTemplates.*;
 
 @Slf4j
@@ -61,9 +63,9 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public Mono<Void> deleteAccount(AccountDeleteDto dto) {
-        return accountRepository.getAccountBalanceById(dto.getId())
+        return accountRepository.getAccountBalance(dto.getId())
                 .flatMap(balance -> {
-                    if (balance > 0) return Mono.error(new AccountOperationException("Ошибка удаления счёта. Баланс положительный"));
+                    if (balance.compareTo(BigDecimal.ZERO) > 0) return Mono.error(new AccountOperationException("Ошибка удаления счёта. Баланс положительный"));
 
                     return accountRepository.deleteById(dto.getId())
                             .doOnSuccess(v -> {

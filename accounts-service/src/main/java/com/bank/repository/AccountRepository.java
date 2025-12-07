@@ -24,17 +24,12 @@ public interface AccountRepository extends R2dbcRepository<Account, Long>, Accou
     Flux<AccountListDto> getAllUserAccountsById(@Param("id") Long id);
 
     @Query("""
-            SELECT balance FROM accounts a
-            WHERE a.id = :id
-            """)
-    Mono<Long> getAccountBalanceById(@Param("id") Long id);
-
-    @Query("""
             UPDATE accounts a
             SET title = :title
             WHERE a.id = :id
             """)
-    Mono<Account> editAccountTitleById(@Param("id") Long id, @Param("title") String title);
+    @Modifying
+    Mono<Integer> editAccountTitleById(@Param("id") Long id, @Param("title") String title);
 
     @Query("""
             SELECT balance FROM accounts a

@@ -3,18 +3,15 @@ package contracts
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Should edit account")
+    description("Should delete user")
     request {
         method POST()
-        url("/accounts/edit") {}
+        url("/users/delete/3") {}
         headers {
             contentType(applicationJson())
         }
         body(
-                id: "2",
-                newTitle: "New Title",
-                currency: "RUB",
-                email: "test@test.ru"
+                "test@test.ru"
         )
     }
     response {

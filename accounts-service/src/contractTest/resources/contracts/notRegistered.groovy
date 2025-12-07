@@ -3,10 +3,10 @@ package contracts
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Should not register account if not valid params")
+    description("Should not register user if not valid params")
     request {
         method POST()
-        url("/accounts/register") {}
+        url("/users/register") {}
         headers {
             contentType(applicationJson())
         }

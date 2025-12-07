@@ -1,13 +1,12 @@
 package com.bank.service;
 
-import com.bank.common.exception.*;
+import com.bank.common.exception.AccountOperationException;
+import com.bank.common.exception.TransferException;
 import com.bank.common.mapper.AccountMapper;
-import com.bank.dto.account.AccountMainPageDto;
-import com.bank.dto.account.AccountPasswordChangeDto;
-import com.bank.dto.account.AccountUpdateDto;
-import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.account.*;
 import com.bank.dto.cash.BalanceDto;
-import com.bank.dto.login.LoginRequest;
+import com.bank.dto.cash.UpdateBalanceRq;
+import com.bank.dto.currency.Currency;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.Account;
 import com.bank.repository.AccountRepository;
@@ -18,11 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
 
 import static com.bank.DataCreator.*;
 import static org.mockito.Mockito.*;
@@ -44,242 +44,111 @@ public class AccountServiceTest {
     @InjectMocks
     private AccountServiceImpl accountService;
 
-    @Test
-    @DisplayName("Проверка метода регистрации")
-    void shouldRegisterAccount() {
-        RegisterAccountRequest rq = createRegisterRq();
-        Long accountId = 1L;
-        Account account = createAccount(accountId);
-
-        when(accountMapper.toAccount(rq)).thenReturn(account);
-        when(accountRepository.save(account)).thenReturn(Mono.just(account));
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
-
-        StepVerifier.create(accountService.register(rq))
-                .verifyComplete();
-
-        verify(accountMapper).toAccount(rq);
-        verify(accountRepository).save(account);
-        verifyNoMoreInteractions(accountMapper);
-        verifyNoMoreInteractions(accountRepository);
-    }
 
     @Test
-    @DisplayName("Проверка ошибки, если указанные данные уже есть")
-    void shouldThrowExceptionIfDataAlreadyExists() {
-        RegisterAccountRequest rq = createRegisterRq();
-        Long accountId = 1L;
-        Account account = createAccount(accountId);
+    @DisplayName("Проверка получения всех счетов пользователя")
+    void shouldGetAllUserAccounts() {
+        Long userId = 1L;
+        AccountListDto dto1 = createAccountListDto(1L, userId);
+        AccountListDto dto2 = createAccountListDto(2L, userId);
 
-        when(accountMapper.toAccount(rq)).thenReturn(account);
-        when(accountRepository.save(account)).thenReturn(Mono.error(new DataIntegrityViolationException("")));
+        when(accountRepository.getAllUserAccountsById(1L)).thenReturn(Flux.just(dto1, dto2));
 
-        StepVerifier.create(accountService.register(rq))
-                .expectError(RegistrationException.class)
-                .verify();
-
-        verify(accountMapper).toAccount(rq);
-        verify(accountRepository).save(account);
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    @DisplayName("Проверка получения всех доступных аккаунтов")
-    void shouldReturnAllAccountsForUserMainPage() {
-        Long accountId = 1L;
-
-        AccountMainPageDto dto1 = createAccountMainPageDto("2");
-        AccountMainPageDto dto2 = createAccountMainPageDto("3");
-
-        when(accountRepository.getAllAccountsForMainPage(accountId)).thenReturn(Flux.just(dto1, dto2));
-
-        StepVerifier.create(accountService.getAllAccounts(accountId))
+        StepVerifier.create(accountService.getUserAccounts(userId))
                 .expectNext(dto1)
                 .expectNext(dto2)
                 .verifyComplete();
 
-        verify(accountRepository).getAllAccountsForMainPage(accountId);
-        verifyNoMoreInteractions(accountRepository);
+        verify(accountRepository).getAllUserAccountsById(userId);
     }
 
     @Test
-    @DisplayName("Проверка изменения пароля аккаунта")
-    void shouldEditPassword() {
-        Long accountId = 1L;
-        AccountPasswordChangeDto dto = createAccountPasswordChangeDto();
-        Account account = createAccount(accountId);
+    @DisplayName("Проверка создания счёта")
+    void shouldCreateAccount() {
+        Long userId = 1L;
+        AccountCreateDto dto = createAccountCreateDto();
+        Account account = createAccount(1L, userId, Currency.RUB);
 
-        when(accountRepository.findAccountById(accountId)).thenReturn(Mono.just(account));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
-        when(passwordEncoder.encode(anyString())).thenReturn("password");
+        when(accountMapper.toAccount(dto, userId)).thenReturn(account);
+        when(accountRepository.save(account)).thenReturn(Mono.just(account));
         when(converter.decrypt(anyString())).thenReturn("test@test.ru");
         when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
-        when(accountRepository.save(account)).thenReturn(Mono.just(account));
 
-        StepVerifier.create(accountService.editPassword(accountId, dto))
+        StepVerifier.create(accountService.createAccount(dto, userId))
                 .verifyComplete();
 
-        verify(accountRepository).findAccountById(accountId);
-        verify(passwordEncoder).matches(anyString(), anyString());
-        verify(passwordEncoder).encode(anyString());
+        verify(accountMapper).toAccount(dto, userId);
+        verify(accountRepository).save(account);
         verify(converter).decrypt(anyString());
         verify(notificationService).sendNotification(anyString(), anyString(), anyString());
-        verify(accountRepository).save(account);
     }
 
     @Test
-    @DisplayName("Проверка изменения пароля аккаунта, если введён существующий")
-    void shouldThrowExceptionIfPasswordExists() {
+    @DisplayName("Проверка удаления счёта")
+    void shouldDeleteAccount() {
         Long accountId = 1L;
-        AccountPasswordChangeDto dto = createAccountPasswordChangeDto();
-        Account account = createAccount(accountId);
+        AccountDeleteDto dto = createAccountDeleteDto(accountId);
 
-        when(accountRepository.findAccountById(accountId)).thenReturn(Mono.just(account));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-
-        StepVerifier.create(accountService.editPassword(accountId, dto))
-                .expectError(PasswordEditException.class)
-                .verify();
-
-        verify(accountRepository).findAccountById(accountId);
-        verify(passwordEncoder).matches(anyString(), anyString());
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(converter, never()).decrypt(anyString());
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
-        verify(accountRepository, never()).save(account);
-    }
-
-    @Test
-    @DisplayName("Проверка изменения пароля аккаунта, если аккаунт не найден")
-    void shouldThrowExceptionIfAccountNotExists() {
-        Long accountId = 1L;
-        AccountPasswordChangeDto dto = createAccountPasswordChangeDto();
-        Account account = createAccount(accountId);
-
-        when(accountRepository.findAccountById(accountId)).thenReturn(Mono.error(new ObjectNotFoundException("Аккаунт", accountId)));
-
-        StepVerifier.create(accountService.editPassword(accountId, dto))
-                .expectError(ObjectNotFoundException.class)
-                .verify();
-
-        verify(accountRepository).findAccountById(accountId);
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(converter, never()).decrypt(anyString());
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
-        verify(accountRepository, never()).save(account);
-    }
-
-    @Test
-    @DisplayName("Проверка изменения данных аккаунта")
-    void shouldChangeAccountData() {
-        Long accountId = 1L;
-        AccountUpdateDto dto = createAccountUpdateDto();
-        Account account = createAccount(accountId);
-
-        when(accountRepository.findAccountById(accountId)).thenReturn(Mono.just(account));
-        when(converter.encrypt(anyString())).thenReturn("test@test.ru");
-        when(accountRepository.save(account)).thenReturn(Mono.just(account));
+        when(accountRepository.getAccountBalance(accountId)).thenReturn(Mono.just(BigDecimal.valueOf(0)));
+        when(accountRepository.deleteById(accountId)).thenReturn(Mono.empty());
+        when(converter.decrypt(anyString())).thenReturn("test@test.ru");
         when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
-        StepVerifier.create(accountService.editAccount(accountId, dto))
+        StepVerifier.create(accountService.deleteAccount(dto))
                 .verifyComplete();
 
-        verify(accountRepository).findAccountById(accountId);
-        verify(converter).encrypt(anyString());
-        verify(accountRepository).save(account);
+        verify(accountRepository).getAccountBalance(accountId);
+        verify(accountRepository).deleteById(accountId);
+        verify(converter).decrypt(anyString());
         verify(notificationService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
-    @DisplayName("Проверка изменения данных аккаунта, если email/phone уже существуют")
-    void shouldNotChangeAccountDataIfEmailOrPhoneExist() {
+    @DisplayName("Проверка неуспешного удаления счёта, если баланс положительный")
+    void shouldNotDeleteAccountIfBalanceIsPositive() {
         Long accountId = 1L;
-        AccountUpdateDto dto = createAccountUpdateDto();
-        Account account = createAccount(accountId);
+        AccountDeleteDto dto = createAccountDeleteDto(accountId);
 
-        when(accountRepository.findAccountById(accountId)).thenReturn(Mono.just(account));
-        when(converter.encrypt(anyString())).thenReturn("test@test.ru");
-        when(accountRepository.save(account)).thenReturn(Mono.error(new AccountEditException()));
+        when(accountRepository.getAccountBalance(accountId)).thenReturn(Mono.error(new AccountOperationException("")));
 
-        StepVerifier.create(accountService.editAccount(accountId, dto))
-                .expectError(AccountEditException.class)
+        StepVerifier.create(accountService.deleteAccount(dto))
+                .expectError(AccountOperationException.class)
                 .verify();
 
-        verify(accountRepository).findAccountById(accountId);
-        verify(converter).encrypt(anyString());
-        verify(accountRepository).save(account);
+        verify(accountRepository).getAccountBalance(accountId);
+        verify(accountRepository, never()).deleteById(accountId);
+        verify(converter, never()).decrypt(anyString());
         verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
-    @DisplayName("Проверка изменения данных аккаунта, аккаунт не найден")
-    void shouldNotChangeAccountDataIfAccountNotExists() {
+    @DisplayName("Проверка изменения названия счёта")
+    void shouldUpdateAccountTitle() {
         Long accountId = 1L;
-        AccountUpdateDto dto = createAccountUpdateDto();
-        Account account = createAccount(accountId);
+        AccountEditDto dto = createAccountEditDto(accountId);
 
-        when(accountRepository.findAccountById(accountId)).thenReturn(Mono.error(new ObjectNotFoundException("Аккаунт", accountId)));
+        when(accountRepository.editAccountTitleById(accountId, dto.getNewTitle())).thenReturn(Mono.just(1));
+        when(converter.decrypt(anyString())).thenReturn("test@test.ru");
+        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
-        StepVerifier.create(accountService.editAccount(accountId, dto))
-                .expectError(ObjectNotFoundException.class)
-                .verify();
-
-        verify(accountRepository).findAccountById(accountId);
-        verify(converter, never()).encrypt(anyString());
-        verify(accountRepository, never()).save(account);
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    @DisplayName("Проверка успешного логина")
-    void shouldSuccessLogin() {
-        LoginRequest rq = createLoginRequest();
-        Account account = createAccount(1L);
-
-        when(accountRepository.getAccountByEmail(rq.getEmail())).thenReturn(Mono.just(account));
-        when(converter.encrypt(anyString())).thenReturn("test@test.ru");
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-
-        StepVerifier.create(accountService.login(rq))
-                .expectNextMatches(resp ->
-                        resp.getId().equals(1L)
-                                && resp.getEmail().equals(rq.getEmail())
-                                && resp.getName().equals("test"))
+        StepVerifier.create(accountService.editAccount(dto))
                 .verifyComplete();
 
-        verify(accountRepository).getAccountByEmail(rq.getEmail());
-        verify(converter).encrypt(anyString());
-        verify(passwordEncoder).matches(anyString(), anyString());
-    }
-
-    @Test
-    @DisplayName("Проверка неуспешного логина")
-    void shouldFailLogin() {
-        LoginRequest rq = createLoginRequest();
-
-        when(accountRepository.getAccountByEmail(rq.getEmail())).thenReturn(Mono.error(new LoginException()));
-        when(converter.encrypt(anyString())).thenReturn("test@test.ru");
-
-        StepVerifier.create(accountService.login(rq))
-                .expectError(LoginException.class)
-                .verify();
-
-        verify(accountRepository).getAccountByEmail(rq.getEmail());
-        verify(converter).encrypt(anyString());
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(accountRepository).editAccountTitleById(accountId, dto.getNewTitle());
+        verify(converter).decrypt(anyString());
+        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
     @DisplayName("Проверка получения баланса")
     void shouldGetBalanceById() {
         Long accountId = 1L;
-        Long balance = 1000L;
+        BigDecimal balance = BigDecimal.valueOf(1000);
         BalanceDto dto = new BalanceDto(accountId, balance);
 
         when(accountRepository.getAccountBalance(accountId)).thenReturn(Mono.just(balance));
 
-        StepVerifier.create(accountService.getBalance(accountId))
+        StepVerifier.create(accountService.getAccountBalance(accountId))
                 .expectNext(dto)
                 .verifyComplete();
 
@@ -289,6 +158,20 @@ public class AccountServiceTest {
     @Test
     @DisplayName("Проверка обновления баланса")
     void shouldUpdateBalance() {
+        Long accountId = 1L;
+        UpdateBalanceRq dto = createUpdateBalanceRq();
+
+        when(accountRepository.updateAccountBalance(accountId, dto.getBalance())).thenReturn(Mono.empty());
+
+        StepVerifier.create(accountService.updateBalance(accountId, dto))
+                .verifyComplete();
+
+        verify(accountRepository).updateAccountBalance(accountId, dto.getBalance());
+    }
+
+    @Test
+    @DisplayName("Проверка осуществления перевода")
+    void shouldTransfer() {
         TransferOperationDto dto = createTransferOperationDto(1L, 2L);
 
         when(accountRepository.transfer(dto)).thenReturn(Mono.empty());
@@ -300,8 +183,8 @@ public class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("Проверка ошибки во время обновления баланса")
-    void shouldNotUpdateBalanceIfException() {
+    @DisplayName("Проверка ошибки во время осуществления перевода")
+    void shouldNotTransferIfException() {
         TransferOperationDto dto = createTransferOperationDto(1L, 2L);
 
         when(accountRepository.transfer(dto)).thenReturn(Mono.error(new TransferException()));
@@ -311,5 +194,23 @@ public class AccountServiceTest {
                 .verify();
 
         verify(accountRepository).transfer(dto);
+    }
+
+    @Test
+    @DisplayName("Проверка получения всех доступных аккаунтов")
+    void shouldReturnAllOtherAccountsForUserMainPage() {
+        Long accountId = 1L;
+        AccountOtherListDto dto1 = createAccountOtherListDto(1L, 2L);
+        AccountOtherListDto dto2 = createAccountOtherListDto(2L, 2L);
+
+        when(accountRepository.getAllAccountsForMainPage(accountId)).thenReturn(Flux.just(dto1, dto2));
+
+        StepVerifier.create(accountService.getAllOtherAccounts(accountId))
+                .expectNext(dto1)
+                .expectNext(dto2)
+                .verifyComplete();
+
+        verify(accountRepository).getAllAccountsForMainPage(accountId);
+        verifyNoMoreInteractions(accountRepository);
     }
 }
