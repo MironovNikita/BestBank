@@ -1,11 +1,11 @@
-#Build
-FROM gradle:8.14.3-jdk-21-and-24 AS buildstage
+FROM gradle:8.7.0-jdk21 AS build
 WORKDIR /app
-COPY . .
-RUN gradle clean build -x test
+COPY gradle.properties settings.gradle build.gradle ./
+COPY blocker-service blocker-service
+COPY common common
+RUN gradle :blocker-service:bootJar -x test
 
-#Runtime
-FROM openjdk:21
+FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
-COPY --from=buildstage /app/blocker-service/build/libs/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=build /app/blocker-service/build/libs/*.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]
