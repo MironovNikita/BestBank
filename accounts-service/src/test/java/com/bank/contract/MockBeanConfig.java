@@ -2,6 +2,7 @@ package com.bank.contract;
 
 import com.bank.dto.account.AccountEditDto;
 import com.bank.dto.account.AccountListDto;
+import com.bank.dto.account.AccountOtherListDto;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.currency.Currency;
 import com.bank.dto.login.LoginResponse;
@@ -51,10 +52,12 @@ public class MockBeanConfig {
 
         when(mock.transfer(any())).thenReturn(Mono.empty());
 
+        AccountOtherListDto other1 = new AccountOtherListDto(1L, 2L, Currency.RUB, "Test", "Test", "89996665522");
+        AccountOtherListDto other2 = new AccountOtherListDto(2L, 2L, Currency.EUR, "Test", "Test", "89996665522");
+        when(mock.getAllOtherAccounts(anyLong())).thenReturn(Flux.just(other1, other2));
+
         return mock;
     }
-
-    //TODO Дополнить методы
 
     @Bean
     public UserService userService() {

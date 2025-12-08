@@ -18,21 +18,8 @@ Contract.make {
         }
         body(
                 [
-                        [
-                                id     : "1",
-                                ownerId: "3",
-                                title: "Test",
-                                currency: "RUB",
-                                balance: "1000.00"
-                        ],
-                        [
-
-                                id     : "2",
-                                ownerId: "3",
-                                title: "Test",
-                                currency: "EUR",
-                                balance: "10.00"
-                        ]
+                        [id: "1", ownerId: "3", title: "Test", currency: "RUB", balance: "1000.00"] as Map,
+                        [id: "2", ownerId: "3", title: "Test", currency: "EUR", balance: "10.00"] as Map
                 ]
         )
     }

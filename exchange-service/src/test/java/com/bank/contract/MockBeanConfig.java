@@ -1,4 +1,4 @@
-package contract;
+package com.bank.contract;
 
 import com.bank.dto.currency.Currency;
 import com.bank.dto.currency.CurrencyRateDto;

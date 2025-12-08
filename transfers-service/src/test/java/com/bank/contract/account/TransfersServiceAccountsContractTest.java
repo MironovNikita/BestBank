@@ -35,7 +35,7 @@ public class TransfersServiceAccountsContractTest {
     @DisplayName("Проверка вызова операции перевода")
     void testTransfer() {
         TransferOperationDto dto =
-                new TransferOperationDto(3L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(1000), null);
+                new TransferOperationDto(2L, Currency.RUB, 3L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(1000), null);
 
         StepVerifier.create(accountsServiceClient.transfer(dto))
                 .verifyComplete();

@@ -145,6 +145,4 @@ public class AccountRepositoryTest extends AbstractRepositoryTest {
         assertThat(account1Balance).isEqualByComparingTo(BigDecimal.valueOf(0.00));
         assertThat(account2Balance).isEqualByComparingTo(BigDecimal.valueOf(2000.00));
     }
-
-
 }

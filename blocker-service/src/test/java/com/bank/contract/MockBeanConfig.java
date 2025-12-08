@@ -1,4 +1,4 @@
-package contract;
+package com.bank.contract;
 
 import com.bank.service.BlockerService;
 import org.mockito.Mockito;

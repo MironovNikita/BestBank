@@ -6,7 +6,7 @@ Contract.make {
     description("Should edit user data")
     request {
         method POST()
-        url("/users/3/editAccount") {}
+        url("/users/3/editUser") {}
         headers {
             contentType(applicationJson())
         }

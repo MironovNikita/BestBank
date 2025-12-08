@@ -1,4 +1,4 @@
-package contract;
+package com.bank.contract;
 
 import com.bank.controller.ExchangeController;
 import io.restassured.module.webtestclient.RestAssuredWebTestClient;
