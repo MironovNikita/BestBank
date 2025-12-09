@@ -1,6 +1,5 @@
 package com.bank.common.config;
 
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
@@ -15,10 +14,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    @LoadBalanced
     public WebClient.Builder notificationsWebClientBuilder() {
         return WebClient.builder()
-                .baseUrl("lb://notification-service");
+                .baseUrl("http://notification-service:8084");
     }
 
     @Bean
@@ -28,7 +26,6 @@ public class WebClientConfig {
 
         oauth.setDefaultClientRegistrationId("notifications-service");
         return notificationsWebClientBuilder()
-                .baseUrl("lb://notification-service")
                 .filter(oauth)
                 .build();
     }
