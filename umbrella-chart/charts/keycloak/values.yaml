@@ -1,0 +1,21 @@
+replicaCount: 1
+
+# Команда запуска Keycloak
+command:
+  - "/opt/keycloak/bin/kc.sh"
+  - "start"
+  - "--http-port=8080"
+  - "--hostname-strict=false"
+
+# Переменные окружения
+extraEnv: |
+  - name: KC_BOOTSTRAP_ADMIN_USERNAME
+    value: admin
+  - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+    value: admin
+
+http:
+  relativePath: "/keycloak"
+
+service:
+  httpPort: 8080

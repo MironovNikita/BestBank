@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts-service
+  labels:
+    app: accounts-service
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: accounts-service
+  template:
+    metadata:
+      labels:
+        app: accounts-service
+    spec:
+      containers:
+        - name: accounts-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.env.SPRING_PROFILES_ACTIVE }}"
+
+            #База данных
+            - name: SPRING_R2DBC_DATASOURCE_URL
+              value: "r2dbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}"
+
+            - name: SPRING_LIQUIBASE_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}"
+
+            - name: SPRING_DATASOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-secret
+                  key: db-username
+
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-secret
+                  key: db-password
+
+            # OAuth & Keycloak
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: accounts-service-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT
+              valueFrom:
+                configMapKeyRef:
+                  name: accounts-service-config
+                  key: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWK_SET_URI
+
+            - name: SPRING_SECURITY_OAUTH2_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-secret
+                  key: oauth-client-secret

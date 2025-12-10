@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: accounts-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8081
+  type: ClusterIP
+
+env:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+
+database:
+  host: "accounts-db"
+  port: 5432
+  name: "accounts-db"
+  username: "postgres"
+  password: "Nikita1995"
+
+keycloak:
+  issuerUri: "http://keycloak:8080/realms/bank-app"
+  jwkSetUri: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
+  clientSecret: "q3rpxNJ0K4zIKEOM0AaTTwQIDB2bLLkD"
+
+oauth:
+  frontui:
+    clientSecret: "q3rpxNJ0K4zIKEOM0AaTTwQIDB2bLLkD"
+  notifications:
+    clientSecret: "q3rpxNJ0K4zIKEOM0AaTTwQIDB2bLLkD"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: bestbank.local
+  basePath:
+    - /accounts
+    - /users
