@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    helm.sh/chart: keycloak-0.1.0
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: "26.1.3"
+    app.kubernetes.io/managed-by: Helm
+data:
+  bank-app.json: |
+    {{ .Files.Get "bank-app.json" | nindent 4 }}
