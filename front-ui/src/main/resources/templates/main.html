@@ -360,7 +360,7 @@
                        th:each="userError : ${userErrors}" th:text="${userError}"></p>
 
                     <p style="color:green;" th:if="${successUpdateUserMessage != null}"
-                       th:text="${successUpdateUsercMessage}"></p>
+                       th:text="${successUpdateUserMessage}"></p>
                 </div>
 
                 <form method="post" th:action="@{'/editUser'}">
