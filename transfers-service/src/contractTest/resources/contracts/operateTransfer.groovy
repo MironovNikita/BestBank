@@ -11,10 +11,12 @@ Contract.make {
             contentType(applicationJson())
         }
         body(
-                accountIdFrom: 3,
-                accountIdTo: 2,
+                accountIdFrom: 2,
+                currencyFrom: "RUB",
+                accountIdTo: 3,
+                currencyTo: "EUR",
                 email: "test@test.ru",
-                amount: 1000
+                amountFrom: 1000
         )
     }
     response {

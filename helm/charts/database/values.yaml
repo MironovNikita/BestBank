@@ -1,0 +1,16 @@
+image:
+  repository: postgres
+  tag: "13.21-alpine3.22"
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 5432
+  targetPort: 5432
+env:
+  POSTGRES_DB: database
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: Nikita1995
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: ""

@@ -18,7 +18,7 @@ public class TransfersController {
     private final TransfersService transfersService;
 
     @PostMapping
-    public Mono<Void> operateTransfer(@Validated @RequestBody TransferOperationDto transfersOperation) {
-        return transfersService.operateTransfer(transfersOperation);
+    public Mono<Void> operateTransfer(@Validated @RequestBody TransferOperationDto dto) {
+        return transfersService.operateTransfer(dto);
     }
 }

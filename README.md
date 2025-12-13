@@ -7,42 +7,38 @@
 </p>
 
 # 🏦 Микросервисное приложение Best Bank
-Это микросервисное веб-приложение — банк, реализованный на Java 21 с использованием Spring Framework версии 6.1 и выше (со Spring Boot), при написании которого использовались следующие фреймворки: WebFlux, Security, Cloud, R2DBC и др. Проект управляется с помощью системы сборки Gradle. Применение вышеуказанных фреймворков позволило реализовать полностью неблокирующее взаимодействие с базами данных и построить высокопроизводительное масштабируемое веб-приложение, предусматривающее аутентификацию и ограничение доступа к API (логин/пароль). Также в проекте предусмотрено развёртывание в контейнерах Docker с применением Liquibase-скриптов для БД.
+Это микросервисное веб-приложение — банк, реализованный на Java 21 с использованием Spring Framework версии 6.1 и выше (со Spring Boot), при написании которого использовались следующие фреймворки: WebFlux, Security, Cloud, R2DBC и др. Проект управляется с помощью системы сборки Gradle. Применение вышеуказанных фреймворков позволило реализовать полностью неблокирующее взаимодействие с базами данных и построить высокопроизводительное масштабируемое веб-приложение, предусматривающее аутентификацию и ограничение доступа к API (логин/пароль). Также в проекте предусмотрено развёртывание в K8s с применением Jenkins и Helm-chart'ов. Обо всём далее.
 
 ## 📝 Описание
-Приложение состоит из семи "внутренних" модулей и 1 "внешнего":
-- 🛠️ config-service;
-- 🔍 discovery-service;
+Само приложение состоит из семи "внутренних" модулей и 1 "внешнего":
 - 📝 accounts-service;
 - 💵 cash-service;
 - 💸 transfers-service;
+- 🚧 blocker-service;
+- 💱 exchange-service;
+- 🔄 exchange-generator;
 - 📩 notification-service;
 - 🖥️ front-ui.
--  keycloak
 а также "внешнего" вспомогательного модуля:
 - 🔐 keycloak - модуль аутентификации между микросервисами (OAuth2 протокол разделяет роли клиента, владельца ресурса, сервера авторизации и сервера ресурсов).
 
-**Сonfig-service**.
-Сервис, являющийся поставщиком конфигураций для остальных микросервисов. Ознакомиться с конфигурациями можно [**тут**](https://github.com/MironovNikita/BestBank/blob/main/config-service/config). В приложении настроен на порту 8888.
-
-**Discover-service**.
-Это ключевой микросервис, реализующий паттерн Service Discovery в микросервисной архитектуре.
-- основные функции и роль discovery-service:
-- обеспечивает автоматическую регистрацию всех микросервисов при их запуске;
-- позволяет динамически отслеживать доступность и статус сервисов (активен/неактивен);
-- предоставляет централизованный реестр, где каждый сервис может найти актуальные адреса и порты других сервисов без жёстких настроек;
-- поддерживает динамическое масштабирование — добавление и удаление экземпляров сервисов отражается в реестре мгновенно;
-- улучшает отказоустойчивость, позволяя клиентам и балансировщикам нагрузки направлять запросы только на живые экземпляры.
-В приложении настроен на порту 8761 с использованием Eureka Server.
-
 **Accounts-service**
-Сервис, являющийся основным для приложения. В нём содержится база данных по аккаунтам. Также он отвечает за логику проверки credentials, поступающих от front-ui при логине, проверка баланса, и т.д. Любое изменение с аккаунтом также находится в его зоне ответственности. В приложении настроен на порту 8081.
+Сервис, являющийся основным для приложения. В нём содержится база данных по счетам и учётным записям пользователей. Также он отвечает за логику проверки credentials, поступающих от front-ui при логине, проверка баланса, и т.д. Любое изменение с аккаунтом также находится в его зоне ответственности. В приложении настроен на порту 8081.
 
 **Cash-service**
-Сервис, отвечающий за увеличение/уменьшение баланса пользователя за счёт наличных: снять/положить. Имеет свою собственную базу данных, где хранится история, какой пользователь, когда и какую операцию с наличностью совершал. Напрямую доступа к БД accounts-service не имеет, обращается к ней через данный сервис. В приложении настроен на порту 8083.
+Сервис, отвечающий за увеличение/уменьшение баланса счёта пользователя за счёт наличных: снять/положить. Имеет свою собственную базу данных, где хранится история, какой пользователь, когда и какую операцию с наличностью совершал. Напрямую доступа к БД accounts-service не имеет, обращается к ней через данный сервис. В приложении настроен на порту 8083.
 
 **Transfers-service**
-Сервис, отвечающий за перевод средств другим пользователям со своего счёта. По аналогии с cash-service имеет собственную БД, в которой ведётся "история", кто, когда, кому и сколько переводил. Также не имеет прямого доступа к БД accounts-service. Обращается за нужными данными через сервис. В приложении настроен на порту 8082.
+Сервис, отвечающий за перевод средств другим пользователям со своего счёта на любые другие счета (в разных валютах). По аналогии с cash-service имеет собственную БД, в которой ведётся "история", кто, когда, кому и сколько переводил. Также не имеет прямого доступа к БД accounts-service. Обращается за нужными данными через сервис. Также в случае необходимости конвертации валют обращается в exchange-service, который содержит информацию о текущем курсе при покупке/продаже валюты. В приложении настроен на порту 8082.
+
+**Blocker-service**
+Сервис, отвечающий за проверку подозрительности операции (с наличными или переводом). В данном проекте реализован простым алгоритмом с 80% вероятностью успеха. В приложении настроен на порту 8086.
+
+**Exchange-service**
+Сервис, отвечающий за хранение текущих курсов валют, а также за пересчёт полученных сумм в другие валюты. В приложении настроен на порту 8087.
+
+**Exchange-generator**
+Сервис, отвечающий за генерацию текущего отношения валют к существующей отправной валюте. В данном проекте ей является рубль. Его курс всегда берётся за 1. В приложении настроен на порту 8088.
 
 **Notification-service**
 Сервис, отвечающий за отправку уведомлений. В данном приложении настроена отправка уведомлений через электронную почту. В качестве сервера smtp используется Яндекс. Подробнее можно посмотреть в конфиге. Уведомления предусмотрены для:
@@ -68,7 +64,14 @@
 
 Примеры таблиц баз данных выглядят так:
 
-База данных аккаунтов:
+Таблица базы данных пользователей:
+<p align="center">
+
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/usersTable.png">
+
+</p>
+
+База данных счетов:
 <p align="center">
 
   <img src="https://github.com/MironovNikita/BestBank/blob/main/images/accountsTable.png">
@@ -97,6 +100,8 @@
 
 ### 🚀 Запуск программы
 
+#### 💻 Локально
+
 1) Установить БД [**PostgreSQL**](https://www.postgresql.org/download/);
 2) Установить Gradle;
 3) Скачать проект;
@@ -114,6 +119,44 @@ quay.io/keycloak/keycloak:26.1.3 start-dev
 config-service -> discovery-service -> (accounts-service, cash-service, transfers-service, notification-service) -> front-ui.
 8) Перейти на **http://localhost:8085/best-bank/**;
 9) Пользоваться :)
+
+#### ☸️ С помощью инструментов Helm и K8s
+```
+# Собрать образы приложений
+docker build -f transfers-service/Dockerfile -t transfers-service:latest .
+docker build -f accounts-service/Dockerfile -t accounts-service:latest .
+docker build -f blocker-service/Dockerfile -t blocker-service:latest .
+docker build -f cash-service/Dockerfile -t cash-service:latest .
+docker build -f exchange-generator/Dockerfile -t exchange-generator:latest .
+docker build -f exchange-service/Dockerfile -t exchange-service:latest .
+docker build -f front-ui/Dockerfile -t front-ui:latest .
+docker build -f notification-service/Dockerfile -t notification-service:latest .
+
+# Полностью развернуть приложение (у вас должен быть установлен nginx)
+cd helm
+helm install bank-app . --namespace bank-app --create-namespace --
+
+# Также необходимо настроить post-forward для локального доступа с помощью скрипта
+./start-port-forward.sh
+```
+
+Со скриптом можно ознакомиться [**тут**](https://github.com/MironovNikita/BestBank/blob/main/helm/set-ports.sh).
+
+Как видим, наше приложение успешно развернулось в K8s:
+<p align="center">
+
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/k8s.png">
+
+</p>
+
+```
+NAME: bank-app
+LAST DEPLOYED: Sat Dec 13 00:35:43 2025
+NAMESPACE: bank-app
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+```
 
 Логи модулей:
 ```java
@@ -277,31 +320,24 @@ config-service -> discovery-service -> (accounts-service, cash-service, transfer
 
 </p>
 
-Снимем все деньги со счёта:
+Откроем несколько счетов:
+<p align="center">
+
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/openAccount.png">
+
+</p>
+
+Пополним один из них:
 <p align="center">
 
   <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainCash.png">
 
 </p>
 
-Теперь попробуем сделать кому-нибудь перевод:
+Можем выбрать кому и на какой счёт сделать перевод:
 <p align="center">
 
   <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainTransfer.png">
-
-</p>
-
-Отрицательные числа не принимаем. Схитрить не получится :)
-<p align="center">
-
-  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/mainMinus.png">
-
-</p>
-
-Положим деньги на счёт:
-<p align="center">
-
-  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/cashPlus.png">
 
 </p>
 
@@ -387,6 +423,7 @@ public static Mono<Void> insertIntoAccountsTable(DatabaseClient client, Account 
 - cash-service: [**тут**](https://github.com/MironovNikita/BestBank/blob/main/cash-service/src/contractTest/resources/contracts);
 - transfers-service: [**тут**](https://github.com/MironovNikita/BestBank/tree/develop/transfers-service/src/contractTest/resources/contracts);
 - notification-service: [**тут**](https://github.com/MironovNikita/BestBank/tree/develop/notification-service/src/contractTest/resources/contracts).
+С остальными сервисами можно также ознакомиться по аналогичному пути.
 
 Пример одного из groovy-скриптов:
 ```groovy
@@ -419,6 +456,8 @@ Contract.make {
 ./gradlew clean build publishToMavenLocal -p cash-service -x test
 ./gradlew clean build publishToMavenLocal -p transfers-service -x test
 ./gradlew clean build publishToMavenLocal -p notification-service -x test
+./gradlew clean build publishToMavenLocal -p blocker-service -x test
+./gradlew clean build publishToMavenLocal -p exchange-service -x test
 ```
 Каждая команда соберёт стабы для API микросервиса с сохранением в локальный репозиторий:
 <p align="center">
@@ -427,102 +466,77 @@ Contract.make {
 
 </p>
 
-Результат сборки проекта:
-```java
-//Для модуля accounts-service
---------------------------------------------------
-Тестов всего: 30
-Успешно:      30
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+## ⚙️ Описание переменных окружения
 
-ContractVerifierTest > validate_notRegistered() PASSED
+### 🧩 Общие переменные (global.database)
 
-ContractVerifierTest > validate_getBalance() PASSED
+**`global.database.host`**	DNS-имя PostgreSQL внутри кластера. Все микросервисы подключаются к нему.
 
-ContractVerifierTest > validate_editPassword() PASSED
+**`global.database.port`**	Порт PostgreSQL — 5432.
 
-ContractVerifierTest > validate_getOtherAccounts() PASSED
+**`global.database.user`**	Пользователь для подключения.
 
-ContractVerifierTest > validate_editAccount() PASSED
+**`global.database.password`**	Пароль.
 
-ContractVerifierTest > validate_registered() PASSED
+### 🏦 Любой сервис с БД (accounts, cash, transfers)
+**`DB_HOST`**	Имя хоста PostgreSQL в кластере.
 
-ContractVerifierTest > validate_transfer() PASSED
---------------------------------------------------
-Тестов всего: 9
-Успешно:      9
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`DB_NAME`**	Имя конкретной базы (у каждого сервиса своя база).
 
-//Для модуля cash-service:
---------------------------------------------------
-Тестов всего: 7
-Успешно:      7
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`DB_PORT`**	Порт базы данных. Обычно 5432.
 
-ContractVerifierTest > validate_operateCash() PASSED
---------------------------------------------------
-Тестов всего: 1
-Успешно:      1
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`SPRING_DATASOURCE_USER`**	Логин PostgreSQL.
 
-//Для модуля transfers-service:
---------------------------------------------------
-Тестов всего: 6
-Успешно:      6
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`SPRING_DATASOURCE_PASSWORD`**	Пароль PostgreSQL.
 
-ContractVerifierTest > validate_operateTransfer() PASSED
---------------------------------------------------
-Тестов всего: 1
-Успешно:      1
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+### 🌐 Общее для всех Spring Boot микросервисов
 
-//Для модуля notification-service:
---------------------------------------------------
-Тестов всего: 3
-Успешно:      3
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`SPRING_PROFILES_ACTIVE=kubernetes`**	Включает профиль kubernetes.
 
-ContractVerifierTest > validate_sendEmail() PASSED
---------------------------------------------------
-Тестов всего: 1
-Успешно:      1
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER`** URL Keycloak realm. Используется для авторизации пользователей и получения токенов.
 
-//Для модуля front-ui (контрактные):
---------------------------------------------------
-Тестов всего: 7
-Успешно:      7
-Провалено:    0
-Пропущено:    0
-Результат:    SUCCESS
---------------------------------------------------
+**`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT`**	URL публичных ключей Keycloak для проверки JWT токенов.
 
-BUILD SUCCESSFUL in 1m 44s
-93 actionable tasks: 93 executed
-14:02:28: Execution finished 'clean build'.
-```
+**`SPRING_SECURITY_OAUTH2_SECRET`**	Клиентский секрет Keycloak (client secret), уникальный для каждого сервиса.
+
+📌 Каждому микросервису в Keycloak соответствует отдельный “client” со своим секретом.
+
+### 📬 Только для notification-service
+
+**`SPRING_MAIL_USERNAME`**	Email для отправки сообщений.
+
+**`SPRING_MAIL_PASSWORD`**	Пароль приложения Yandex (не обычный пароль).
+
+### 🔑 Только для Keycloak
+
+**`KEYCLOAK_ADMIN`**	Админ-логин для входа в админку.
+
+**`KEYCLOAK_ADMIN_PASSWORD`**	Пароль админа.
+
+### 📦 Сервисные параметры (для каждого сервиса)
+
+Они повторяются, но важны:
+
+**`replicaCount`**	Количество подов. Обычно 1.
+
+**`image.repository`**	Имя образа Docker.
+
+**`image.tag`**	Тег образа (у тебя latest).
+
+**`service.port`**	Внутренний порт Kubernetes-сервиса.
+
+**`targetPort`**	Порт, который слушает контейнер.
+
+**`pullPolicy`**	Политика загрузки образов (IfNotPresent).
+
+### 🗄 Database (PostgreSQL) блок
+
+**`POSTGRES_DB`**	Имя базы по умолчанию.
+
+**`POSTGRES_USER`**	Логин.
+
+**`POSTGRES_PASSWORD`**	Пароль.
+
+**`persistence.enabled`**	Включено хранение данных (PVC).
+
+**`persistence.size`**	Размер диска.

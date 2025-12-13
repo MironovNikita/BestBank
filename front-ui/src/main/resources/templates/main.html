@@ -14,21 +14,14 @@
             padding: 40px 0;
         }
 
-        .container {
-            width: 800px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
         .card {
             background-color: #ffffff;
             border-radius: 16px;
-            padding: 25px 30px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            padding: 18px 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         h2 {
@@ -70,7 +63,7 @@
         .form-group input:focus,
         .form-group select:focus {
             border-color: #6366f1;
-            box-shadow: 0 0 6px rgba(99,102,241,0.25);
+            box-shadow: 0 0 6px rgba(99, 102, 241, 0.25);
             outline: none;
         }
 
@@ -98,18 +91,18 @@
         }
 
         .message {
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 600;
         }
 
         .success {
             color: #16a34a;
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .error {
             color: #dc2626;
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .logout-form {
@@ -136,126 +129,592 @@
             margin-bottom: 15px;
         }
 
+        .page-grid {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            max-width: 2000px;
+        }
+
+        .left-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Верхняя панель */
+        .top-bar {
+            width: 100%;
+            max-width: 2000px;
+            margin: 0 auto 5px auto;
+            padding: 15px 25px;
+
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .top-bar-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .top-bar .logout-form button {
+            color: #6366f1;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .top-bar .logout-form button:hover {
+            color: #4f46e5;
+        }
+
+        .top-bar-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 2000px;
+        }
+
+        .transfer-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .self-transfer-form .form-group:first-child {
+            margin-top: 15px;
+        }
+
+        /* Курсы валют */
+        .currency-table th {
+            text-align: left;
+            padding-bottom: 8px;
+            color: #6b7280;
+        }
+
+        .currency-table td {
+            padding: 4px 0;
+        }
+
+        .ticker {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .ticker-inner {
+            display: inline-block;
+            animation: scroll 12s linear infinite;
+            font-size: 15px;
+        }
+
+        .ticker-inner span {
+            margin-right: 40px;
+            font-size: 15px;
+            color: #374151;
+            display: inline-block;
+        }
+
+        .ticker-inner::after {
+            content: attr(data-content);
+            margin-left: 40px;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(+600%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .currency-card {
+            width: 100%;
+            max-width: 2000px;
+            margin: 0 auto 5px auto;
+        }
+
+        .currency-card.card {
+            gap: 5px;
+        }
+
+        .currency-card h2 {
+            margin-bottom: 5px;
+        }
+
+        .currency-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
     </style>
 </head>
+
 <body>
-<div class="container">
+<!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+<div class="main-wrapper">
 
-    <!-- Выйти -->
-    <form th:action="@{/logout}" method="post" class="logout-form">
-        <button type="submit">ВЫЙТИ &cudarrr;</button>
-    </form>
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <div class="top-bar-wrapper">
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <span th:text="'Добро пожаловать, ' + ${session.userName} + '!'"></span>
+            </div>
 
-    <!-- Информация о пользователе и смена пароля -->
-    <div class="card">
-        <div class="welcome">
-            <span th:text="'Добро пожаловать, ' + ${session.userName} + '!'"></span>
-            <span th:text="'Текущий баланс: ' + ${balance} + ' руб.'"></span>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit">ВЫЙТИ &cudarrr;</button>
+            </form>
         </div>
+    </div>
 
-        <h2>Изменить пароль</h2>
-        <form method="post" th:action="@{'/editPassword'}" oninput="submitBtn.disabled = newPassword.value !== confirmPassword.value">
+    <!-- БЛОК КУРСОВ ВАЛЮТ -->
+    <div class="currency-wrapper">
+        <div class="currency-card card">
+            <h2>Курсы валют</h2>
+
             <div class="message">
-                <p style="color:red;" th:if="${passwordErrors != null}" th:each="passwordError : ${passwordErrors}" th:text="${passwordError}"></p>
-                <p style="color:green;" th:if="${successPasswordMessage != null}" th:text="${successPasswordMessage}"></p>
+                <p style="color:red;" th:if="${currencyErrors != null}"
+                   th:each="currencyError : ${currencyErrors}" th:text="${currencyError}"></p>
             </div>
-            <div class="form-group">
-                <label>Пароль</label>
-                <input id="newPassword" name="newPassword" type="password" required/>
-            </div>
-            <div class="form-group">
-                <label>Повторите пароль</label>
-                <input id="confirmPassword" name="confirmPassword" type="password" required/>
-            </div>
-            <div class="button-group">
-                <button id="submitBtn" disabled>Изменить пароль</button>
-            </div>
-        </form>
-    </div>
 
-    <!-- Редактирование аккаунта -->
-    <div class="card">
-        <h2>Редактировать аккаунт</h2>
-        <div class="message">
-            <p style="color:red;" th:if="${accountErrors != null}" th:each="accountError : ${accountErrors}" th:text="${accountError}"></p>
-            <p style="color:green;" th:if="${successUpdateAccMessage != null}" th:text="${successUpdateAccMessage}"></p>
+            <div class="ticker">
+                <div class="ticker-inner">
+                    <span th:each="rate : ${currencyRates}"
+                          th:text="${rate.currency + ': ' + rate.buy + ' / ' + rate.sell}">
+                    </span>
+                </div>
+            </div>
         </div>
-        <form method="post" th:action="@{'/editAccount'}">
-            <div class="form-group">
-                <label>Email</label>
-                <span th:text="${email}"></span>
-                <input name="email" type="text"/>
-            </div>
-            <div class="form-group">
-                <label>Имя</label>
-                <span th:text="${name}"></span>
-                <input name="name" type="text"/>
-            </div>
-            <div class="form-group">
-                <label>Фамилия</label>
-                <span th:text="${surname}"></span>
-                <input name="surname" type="text"/>
-            </div>
-            <div class="form-group">
-                <label>Дата рождения</label>
-                <span th:text="${birthdate}"></span>
-                <input name="birthdate" type="date"/>
-            </div>
-            <div class="form-group">
-                <label>Телефон</label>
-                <span th:text="${phone}"></span>
-                <input name="phone" type="text"/>
-            </div>
-            <div class="button-group">
-                <button>Сохранить изменения</button>
-            </div>
-        </form>
     </div>
 
-    <!-- Работа с наличными -->
-    <div class="card">
-        <h2>Наличные</h2>
-        <div class="message">
-            <p style="color:red;" th:if="${cashErrors != null}" th:each="cashError : ${cashErrors}" th:text="${cashError}"></p>
-            <p style="color:green;" th:if="${successCashMessage != null}" th:text="${successCashMessage}"></p>
+    <div class="page-grid">
+        <!-- ЛЕВАЯ КОЛОНКА -->
+        <div class="left-column">
+
+            <!-- Приветствие + Изменить пароль -->
+            <div class="card">
+                <h2>Изменить пароль</h2>
+
+                <form method="post" th:action="@{'/editPassword'}"
+                      oninput="submitBtn.disabled = newPassword.value !== confirmPassword.value">
+
+                    <div class="message">
+                        <p style="color:red;" th:if="${passwordErrors != null}"
+                           th:each="passwordError : ${passwordErrors}" th:text="${passwordError}"></p>
+
+                        <p style="color:green;" th:if="${successPasswordMessage != null}"
+                           th:text="${successPasswordMessage}"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input id="newPassword" name="newPassword" type="password" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Повторите пароль</label>
+                        <input id="confirmPassword" name="confirmPassword" type="password" required/>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="submitBtn" disabled>Изменить пароль</button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Редактирование данных -->
+            <div class="card">
+                <h2>Редактировать личные данные</h2>
+
+                <div class="message">
+                    <p style="color:red;" th:if="${userErrors != null}"
+                       th:each="userError : ${userErrors}" th:text="${userError}"></p>
+
+                    <p style="color:green;" th:if="${successUpdateUserMessage != null}"
+                       th:text="${successUpdateUserMessage}"></p>
+                </div>
+
+                <form method="post" th:action="@{'/editUser'}">
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <span th:text="${email}"></span>
+                        <input name="email" type="text"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <span th:text="${name}"></span>
+                        <input name="name" type="text"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Фамилия</label>
+                        <span th:text="${surname}"></span>
+                        <input name="surname" type="text"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Дата рождения</label>
+                        <span th:text="${birthdate}"></span>
+                        <input name="birthdate" type="date"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Телефон</label>
+                        <span th:text="${phone}"></span>
+                        <input name="phone" type="text"/>
+                    </div>
+
+                    <div class="button-group">
+                        <button>Сохранить изменения</button>
+                    </div>
+                </form>
+                <form method="post" th:action="@{/deleteUser}" style="display:inline;">
+                    <input type="hidden" name="id" th:value="${session.id}"/>
+                    <button style="background:#dc2626;">Удалить личный кабинет</button>
+                </form>
+            </div>
+
+            <!-- Переводы между своими счетами -->
+            <div class="card transfer-card">
+                <h2>Перевод между своими счетами</h2>
+
+                <div class="message">
+                    <p style="color:red;" th:if="${selfTransferErrors != null}" th:each="self : ${selfTransferErrors}" th:text="${self}"></p>
+                    <p style="color:green;" th:if="${selfTransferSuccess != null}" th:text="${selfTransferSuccess}"></p>
+                </div>
+
+                <form method="post" th:action="@{/transfer/self}">
+                    <div class="form-group">
+                        <label>Счёт списания</label>
+                        <select name="accountIdFrom" id="accountIdFromSelf" required>
+                            <option value="">Выберите счёт для списания...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:data-currency="${acc.currency}"
+                                    th:text="${acc.title}"></option>
+                        </select>
+
+                        <input type="hidden" name="currencyFrom" id="currencyFromSelf">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Счёт зачисления</label>
+                        <select name="accountIdTo" id="accountIdToSelf" required>
+                            <option value="">Выберите счёт для зачисления...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:data-currency="${acc.currency}"
+                                    th:text="${acc.title}"></option>
+                        </select>
+
+                        <input type="hidden" name="currencyTo" id="currencyToSelf">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Сумма</label>
+                        <input id="selfAmountInput"
+                               name="amountFrom"
+                               type="number"
+                               step="0.01"
+                               min="0.01"
+                               placeholder="0.01"
+                               pattern="^\d+(\.\d{1,2})?$"
+                               required/>
+                    </div>
+
+                    <div class="button-group">
+                        <button>Перевести</button>
+                    </div>
+                </form>
+            </div>
+
         </div>
-        <form method="post" th:action="@{'/cash'}">
-            <div class="form-group">
-                <label>Сумма</label>
-                <input name="amount" type="number" required/>
-            </div>
-            <div class="button-group">
-                <button name="action" value="PUT">Положить</button>
-                <button name="action" value="GET">Снять</button>
-            </div>
-        </form>
-    </div>
 
-    <!-- Перевод -->
-    <div class="card">
-        <h2>Перевод</h2>
-        <div class="message">
-            <p style="color:red;" th:if="${transferErrors != null}" th:each="transferError : ${transferErrors}" th:text="${transferError}"></p>
-            <p style="color:green;" th:if="${successTransferMessage != null}" th:text="${successTransferMessage}"></p>
+        <!-- ПРАВАЯ КОЛОНКА -->
+        <div class="right-column">
+
+            <!-- Мои счета -->
+            <div class="card">
+                <h2>Мои счета</h2>
+
+                <div class="message">
+                    <p class="error" th:if="${accountListErrors != null}"
+                       th:each="err : ${accountListErrors}" th:text="${err}"></p>
+                    <p class="success" th:if="${accountListSuccess != null}" th:text="${accountListSuccess}"></p>
+                </div>
+
+                <div th:if="${userAccounts != null}">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <tr>
+                            <th style="text-align:left; padding: 5px 0;">Название</th>
+                            <th style="text-align:left;">Валюта</th>
+                            <th style="text-align:left;">Баланс</th>
+                            <th style="text-align:left;">Действия</th>
+                        </tr>
+
+                        <tr th:each="acc : ${userAccounts}">
+                            <td th:text="${acc.title}"></td>
+                            <td th:text="${acc.currency}"></td>
+                            <td th:text="${acc.balance}"></td>
+
+                            <td>
+
+                                <button type="button"
+                                        style="background:#4f46e5;"
+                                        th:attr="data-id=${acc.id}, data-title=${acc.title}"
+                                        onclick="showEditForm(this)">
+                                    Изменить
+                                </button>
+
+                                <form method="post" th:action="@{/accounts/edit}"
+                                      th:id="'edit-form-' + ${acc.id}"
+                                      style="display:none; margin-top:5px;">
+
+                                    <input type="hidden" name="id" th:value="${acc.id}"/>
+                                    <input type="hidden" name="currency" th:value="${acc.currency}"/>
+
+                                    <input type="text" name="newTitle"
+                                           placeholder="Новое название"
+                                           style="padding:5px; width:270px"/>
+
+                                    <button style="background:green;">Сохранить</button>
+                                </form>
+
+                                <!-- УДАЛЕНИЕ -->
+                                <form method="post" th:action="@{/accounts/delete}" style="display:inline;">
+                                    <input type="hidden" name="id" th:value="${acc.id}"/>
+                                    <input type="hidden" name="currency" th:value="${acc.currency}"/>
+                                    <button style="background:#dc2626;">Удалить</button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <hr/>
+
+                <h3>Добавить новый счёт</h3>
+                <form method="post" th:action="@{/accounts/create}">
+                    <div class="form-group">
+                        <label>Название счёта</label>
+                        <input name="title" type="text" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Валюта</label>
+                        <select name="currency" required>
+                            <option th:each="cur : ${availableCurrencies}" th:value="${cur}" th:text="${cur}"></option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button>Добавить</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Работа с наличными -->
+            <div class="card">
+                <h2>Наличные</h2>
+
+                <div class="message">
+                    <p style="color:red;" th:if="${cashErrors != null}" th:each="cashError : ${cashErrors}" th:text="${cashError}"></p>
+                    <p style="color:green;" th:if="${successCashMessage != null}" th:text="${successCashMessage}"></p>
+                </div>
+
+                <form method="post" th:action="@{/cash}">
+                    <div class="form-group">
+                        <label>Сумма</label>
+                        <input name="amount" type="number" required/>
+                    </div>
+
+                    <div th:if="${userAccounts != null}" class="form-group">
+                        <label>Мои счета</label>
+
+                        <select name="id" id="accountsSelect" required>
+                            <option value="">Выберите счёт...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:data-owner="${acc.ownerId}"
+                                    th:data-currency="${acc.currency}"
+                                    th:data-balance="${acc.balance}"
+                                    th:text="${acc.title}">
+                            </option>
+                        </select>
+
+                        <input type="hidden" name="ownerId" id="ownerIdHidden">
+
+                        <div id="selectedInfo" style="margin-top:8px; font-size:15px;"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button name="operation" value="PUT">Положить</button>
+                        <button name="operation" value="GET">Снять</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Переводы на другие счета -->
+            <div class="card transfer-card">
+                <h2>Перевод на другой счёт</h2>
+
+                <div class="message">
+                    <p style="color:red;" th:if="${transferErrors != null}" th:each="err : ${transferErrors}" th:text="${err}"></p>
+                    <p style="color:green;" th:if="${successTransferMessage != null}" th:text="${successTransferMessage}"></p>
+                </div>
+
+                <form method="post" th:action="@{/transfer/other}">
+                    <div class="form-group">
+                        <label>Счёт списания</label>
+                        <select name="accountIdFrom" id="accountIdFromOther" required>
+                            <option value="">Выберите счёт для перевода...</option>
+                            <option th:each="acc : ${userAccounts}"
+                                    th:value="${acc.id}"
+                                    th:data-currency="${acc.currency}"
+                                    th:text="${acc.title}"></option>
+                        </select>
+
+                        <input type="hidden" name="currencyFrom" id="currencyFromOther">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Счёт получателя</label>
+                        <select name="accountIdTo" id="accountIdToOther" required>
+                            <option value="">Выберите счёт получателя...</option>
+                            <option th:each="acc : ${otherAccounts}"
+                                    th:value="${acc.id}" th:text="${acc.name} + ' ' + ${acc.surname} + ' (' + ${acc.phone} + ') ' + ${acc.currency} "
+                                    th:data-currency="${acc.currency}"></option>
+                        </select>
+
+                        <input type="hidden" name="currencyTo" id="currencyToOther">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Сумма</label>
+                        <input id="otherAmountInput"
+                               name="amountFrom"
+                               type="number"
+                               step="0.01"
+                               min="0.01"
+                               placeholder="0.01"
+                               pattern="^\d+(\.\d{1,2})?$"
+                               required/>
+                    </div>
+
+
+                    <div class="button-group">
+                        <button>Перевести</button>
+                    </div>
+                </form>
+            </div>
+
         </div>
-        <form method="post" th:action="@{'/transfer'}">
-            <div class="form-group">
-                <label>Сумма</label>
-                <input name="transferValue" type="number" required/>
-            </div>
-            <div class="form-group">
-                <label>Кому</label>
-                <select name="accountTo">
-                    <option th:each="account : ${accounts}" th:value="${account.getId()}"
-                            th:text="${account.getName()} + ' ' + ${account.getSurname()} + ' Тел.: ' + ${account.getPhone()}"></option>
-                </select>
-            </div>
-            <div class="button-group">
-                <button>Перевести</button>
-            </div>
-        </form>
     </div>
-
 </div>
 </body>
 </html>
+
+<script>
+    function showEditForm(btn) {
+        const id = btn.dataset.id;
+        const title = btn.dataset.title;
+
+        const form = document.getElementById("edit-form-" + id);
+        form.style.display = form.style.display === "none" ? "block" : "none";
+
+        const input = form.querySelector("input[name='newTitle']");
+        if (input) input.value = title;
+    }
+</script>
+
+<script>
+    const select = document.getElementById("accountsSelect");
+    const info = document.getElementById("selectedInfo");
+    const ownerHidden = document.getElementById("ownerIdHidden");
+
+    function updateInfo() {
+        const opt = select.options[select.selectedIndex];
+
+        if (!opt || opt.value === "") {
+            info.innerHTML = "";
+            ownerHidden.value = "";
+            return;
+        }
+
+        info.innerHTML = `
+            Валюта: <b>${opt.dataset.currency}</b> |
+            Баланс: <b>${opt.dataset.balance}</b>
+        `;
+
+        ownerHidden.value = opt.dataset.owner;
+    }
+
+    select.addEventListener("change", updateInfo);
+    updateInfo();
+</script>
+
+<script>
+    document.getElementById('selfAmountInput').addEventListener('change', function (e) {
+        this.value = this.value.replace(',', '.');
+    });
+</script>
+
+<script>
+    document.getElementById('otherAmountInput').addEventListener('change', function (e) {
+        this.value = this.value.replace(',', '.');
+    });
+</script>
+
+<script>
+    function bindCurrencySelect(selectId, hiddenId) {
+        const select = document.getElementById(selectId);
+        const hidden = document.getElementById(hiddenId);
+
+        if (!select || !hidden) return;
+
+        select.addEventListener("change", function () {
+            const selected = this.selectedOptions[0];
+            hidden.value = selected ? selected.dataset.currency : "";
+        });
+    }
+
+    // Для перевода между своими
+    bindCurrencySelect("accountIdFromSelf", "currencyFromSelf");
+    bindCurrencySelect("accountIdToSelf", "currencyToSelf");
+
+    // Для перевода на другой счёт
+    bindCurrencySelect("accountIdFromOther", "currencyFromOther");
+    bindCurrencySelect("accountIdToOther", "currencyToOther");
+</script>

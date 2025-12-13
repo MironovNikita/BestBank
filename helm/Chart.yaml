@@ -1,0 +1,38 @@
+apiVersion: v2
+name: bestbank
+description: Umbrella Helm chart for application
+type: application
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"
+#Имена должны совпадать с именем чарта внутри папок
+dependencies:
+  - name: postgresql
+    version: 0.1.0
+    repository: "file://charts/database"
+  - name: keycloak
+    version: 0.1.0
+    repository: "file://charts/keycloak"
+  - name: exchange-service
+    version: 0.1.0
+    repository: "file://charts/exchange"
+  - name: accounts-service
+    version: 0.1.0
+    repository: "file://charts/accounts"
+  - name: cash-service
+    version: 0.1.0
+    repository: "file://charts/cash"
+  - name: transfers-service
+    version: 0.1.0
+    repository: "file://charts/transfers"
+  - name: blocker-service
+    version: 0.1.0
+    repository: "file://charts/blocker"
+  - name: notification-service
+    version: 0.1.0
+    repository: "file://charts/notification"
+  - name: exchange-generator
+    version: 0.1.0
+    repository: "file://charts/exchange-generator"
+  - name: front-ui
+    version: 0.1.0
+    repository: "file://charts/front"

@@ -1,6 +1,6 @@
 package com.bank.contract;
 
-import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.user.RegisterUserRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +14,7 @@ public class MainControllerContractTest extends AbstractContractTest {
     @Test
     @DisplayName("Проверка успешной регистрации аккаунта")
     void shouldRegisterSuccessfully() {
-        RegisterAccountRequest rq = new RegisterAccountRequest();
+        RegisterUserRequest rq = new RegisterUserRequest();
         rq.setEmail("test@test.ru");
         rq.setPassword("Password1111");
         rq.setName("Test");
@@ -33,7 +33,7 @@ public class MainControllerContractTest extends AbstractContractTest {
     @Test
     @DisplayName("Проверка регистрации нового аккаунта с некорректными данными")
     void shouldNotRegisterNewAccountIfIncorrectFields() {
-        RegisterAccountRequest rq = new RegisterAccountRequest();
+        RegisterUserRequest rq = new RegisterUserRequest();
         rq.setEmail("test");
         rq.setPassword("Pa");
         rq.setName("Test");

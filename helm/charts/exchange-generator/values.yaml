@@ -1,0 +1,17 @@
+replicaCount: 1
+
+image:
+  repository: exchange-generator
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8088
+  type: ClusterIP
+  targetPort: 8088
+
+env:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
+  SPRING_SECURITY_OAUTH2_SECRET: "ls7aUcNo4FTeGuEGl5IQauxzpPMScgYc"

@@ -19,10 +19,13 @@
             <column name="account_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
             <column name="operation" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="amount" type="bigint">
+            <column name="amount" type="decimal(15,2)">
                 <constraints nullable="false"/>
             </column>
             <column name="created" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">

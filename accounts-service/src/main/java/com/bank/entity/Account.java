@@ -1,11 +1,13 @@
 package com.bank.entity;
 
+import com.bank.dto.currency.Currency;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Data
 @Table(name = "accounts")
@@ -15,17 +17,12 @@ public class Account {
     @Id
     private Long id;
 
-    private String email;
+    @Column("owner_id")
+    private Long ownerId;
 
-    private String password;
+    private String title;
 
-    private String name;
+    private Currency currency;
 
-    private String surname;
-
-    private LocalDate birthdate;
-
-    private String phone;
-
-    private Long balance;
+    private BigDecimal balance;
 }

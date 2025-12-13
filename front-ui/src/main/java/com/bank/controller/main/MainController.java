@@ -1,10 +1,12 @@
 package com.bank.controller.main;
 
-import com.bank.dto.account.AccountMainPageDto;
-import com.bank.dto.account.RegisterAccountRequest;
-import com.bank.dto.cash.BalanceDto;
+import com.bank.dto.account.AccountListDto;
+import com.bank.dto.account.AccountOtherListDto;
+import com.bank.dto.currency.Currency;
+import com.bank.dto.currency.CurrencyRateDto;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
+import com.bank.dto.user.RegisterUserRequest;
 import com.bank.security.CustomUserDetails;
 import com.bank.security.SecureBase64Converter;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -29,7 +31,9 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -37,11 +41,14 @@ import java.util.List;
 public class MainController {
 
     private final WebClient accountsWebClient;
+    private final WebClient exchangeServiceWebClient;
     private final SecureBase64Converter converter;
     private final ReactiveAuthenticationManager authenticationManager;
     private final ServerSecurityContextRepository securityContextRepository;
     private final Retry accountsServiceRetry;
     private final CircuitBreaker accountsServiceCB;
+    private final Retry exchangeServiceRetry;
+    private final CircuitBreaker exchangeServiceCB;
 
     @GetMapping("/register")
     public Mono<String> registerPage() {
@@ -49,10 +56,10 @@ public class MainController {
     }
 
     @PostMapping("/register")
-    public Mono<String> register(@ModelAttribute RegisterAccountRequest registerRequest, Model model) {
+    public Mono<String> register(@ModelAttribute RegisterUserRequest registerRequest, Model model) {
         return accountsWebClient
                 .post()
-                .uri("/accounts/register")
+                .uri("/users/register")
                 .bodyValue(registerRequest)
                 .exchangeToMono(resp -> {
 
@@ -98,7 +105,7 @@ public class MainController {
 
         return accountsWebClient
                 .post()
-                .uri("/accounts/login")
+                .uri("/users/login")
                 .bodyValue(loginRequest)
                 .exchangeToMono(resp -> {
                     if (resp.statusCode().is4xxClientError()) {
@@ -157,13 +164,11 @@ public class MainController {
 
         return checkUserId(session)
                 .flatMap(userId -> {
-                    Mono<List<AccountMainPageDto>> accountsMono = accountsWebClient
+                    Mono<List<AccountOtherListDto>> otherAccounts = accountsWebClient
                             .get()
                             .uri("/accounts/{id}", userId)
                             .retrieve()
-                            .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(new RuntimeException(body))))
-                            .bodyToFlux(AccountMainPageDto.class)
+                            .bodyToFlux(AccountOtherListDto.class)
                             .collectList()
                             .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
                             .transformDeferred(RetryOperator.of(accountsServiceRetry))
@@ -172,25 +177,56 @@ public class MainController {
                                 return Mono.just(List.of());
                             });
 
-                    Mono<Long> balanceMono = accountsWebClient
+                    Mono<List<AccountListDto>> userAccounts = accountsWebClient
                             .get()
-                            .uri("/accounts/{id}/balance", userId)
+                            .uri("/accounts/currencies/{id}", userId)
                             .retrieve()
-                            .bodyToMono(BalanceDto.class)
-                            .map(BalanceDto::getBalance)
+                            .bodyToFlux(AccountListDto.class)
                             .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
                             .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                            .collectList()
                             .onErrorResume(ex -> {
-                                log.error("Не удалось получить баланс: {}", ex.getMessage());
-                                return Mono.just(Long.MIN_VALUE);
+                                log.error("Не удалось получить список счетов для пользователя с ID: {}", userId);
+                                return Mono.just(List.of());
                             });
 
-                    return Mono.zip(accountsMono, balanceMono)
+                    Mono<List<CurrencyRateDto>> currencies = exchangeServiceWebClient
+                            .get()
+                            .uri("/exchange/rates")
+                            .retrieve()
+                            .onStatus(HttpStatusCode::is4xxClientError,
+                                    resp -> resp.bodyToMono(String.class)
+                                            .flatMap(body -> {
+                                                model.addAttribute("currencyErrors", body);
+                                                return Mono.error(new RuntimeException(body));
+                                            }))
+                            .bodyToFlux(CurrencyRateDto.class)
+                            .transformDeferred(CircuitBreakerOperator.of(exchangeServiceCB))
+                            .transformDeferred(RetryOperator.of(exchangeServiceRetry))
+                            .collectList()
+                            .onErrorResume(ex -> {
+                                log.error("Не удалось получить актуальные курсы валют: {}", ex.getMessage());
+                                return Mono.just(List.of());
+                            });
+
+                    return Mono.zip(userAccounts, otherAccounts, currencies)
                             .flatMap(tuple -> {
-                                model.addAttribute("accounts", tuple.getT1());
+                                var openedAccounts = tuple.getT1();
+                                var openedCurrencies = openedAccounts
+                                        .stream()
+                                        .map(AccountListDto::getCurrency)
+                                        .collect(Collectors.toSet());
+                                var availableCurrencies = Arrays.stream(Currency.values())
+                                        .filter(currency -> !openedCurrencies.contains(currency))
+                                        .collect(Collectors.toSet());
+
+                                model.addAttribute("userAccounts", openedAccounts);
                                 model.addAttribute("userName", session.getAttribute("userName"));
-                                var balance = tuple.getT2();
-                                model.addAttribute("balance", balance == Long.MIN_VALUE ? "Сервер временно недоступен. Попробуйте позже" : balance);
+                                model.addAttribute("availableCurrencies", availableCurrencies);
+                                var openedOthers = tuple.getT2();
+                                model.addAttribute("otherAccounts", openedOthers);
+                                var currencyRates = tuple.getT3();
+                                model.addAttribute("currencyRates", currencyRates);
                                 return Mono.just("main");
                             });
                 })
@@ -212,20 +248,28 @@ public class MainController {
     private void handleMainPage(WebSession session, Model model) {
         model.addAttribute("successPasswordMessage", session.getAttribute("successPasswordMessage"));
         model.addAttribute("passwordErrors", session.getAttribute("passwordErrors"));
-        model.addAttribute("successUpdateAccMessage", session.getAttribute("successUpdateAccMessage"));
-        model.addAttribute("accountErrors", session.getAttribute("accountErrors"));
+        model.addAttribute("successUpdateUserMessage", session.getAttribute("successUpdateUserMessage"));
+        model.addAttribute("userErrors", session.getAttribute("userErrors"));
         model.addAttribute("successCashMessage", session.getAttribute("successCashMessage"));
         model.addAttribute("cashErrors", session.getAttribute("cashErrors"));
         model.addAttribute("successTransferMessage", session.getAttribute("successTransferMessage"));
         model.addAttribute("transferErrors", session.getAttribute("transferErrors"));
+        model.addAttribute("selfTransferSuccess", session.getAttribute("selfTransferSuccess"));
+        model.addAttribute("selfTransferErrors", session.getAttribute("selfTransferErrors"));
+        model.addAttribute("accountListSuccess", session.getAttribute("accountListSuccess"));
+        model.addAttribute("accountListErrors", session.getAttribute("accountListErrors"));
 
         session.getAttributes().remove("successPasswordMessage");
         session.getAttributes().remove("passwordErrors");
-        session.getAttributes().remove("successUpdateAccMessage");
-        session.getAttributes().remove("accountErrors");
+        session.getAttributes().remove("successUpdateUserMessage");
+        session.getAttributes().remove("userErrors");
         session.getAttributes().remove("successCashMessage");
         session.getAttributes().remove("cashErrors");
         session.getAttributes().remove("successTransferMessage");
         session.getAttributes().remove("transferErrors");
+        session.getAttributes().remove("selfTransferSuccess");
+        session.getAttributes().remove("selfTransferErrors");
+        session.getAttributes().remove("accountListSuccess");
+        session.getAttributes().remove("accountListErrors");
     }
 }

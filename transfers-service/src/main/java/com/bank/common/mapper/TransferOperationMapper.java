@@ -10,7 +10,10 @@ public class TransferOperationMapper {
         TransferOperation transferOperation = new TransferOperation();
         transferOperation.setAccountIdFrom(transferOperationDto.getAccountIdFrom());
         transferOperation.setAccountIdTo(transferOperationDto.getAccountIdTo());
-        transferOperation.setAmount(transferOperationDto.getAmount());
+        transferOperation.setCurrencyFrom(transferOperationDto.getCurrencyFrom());
+        transferOperation.setAmountFrom(transferOperationDto.getAmountFrom());
+        transferOperation.setCurrencyTo(transferOperationDto.getCurrencyTo());
+        transferOperation.setAmountTo(transferOperationDto.getAmountTo() == null ? transferOperationDto.getAmountFrom() : transferOperationDto.getAmountTo());
         return transferOperation;
     }
 }

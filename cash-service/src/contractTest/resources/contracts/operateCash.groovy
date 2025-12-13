@@ -11,7 +11,8 @@ Contract.make {
             contentType(applicationJson())
         }
         body(
-                accountId: 3,
+                id: 3,
+                ownerId: 1,
                 operation: "PUT",
                 email: "test@test.ru",
                 amount: 1000

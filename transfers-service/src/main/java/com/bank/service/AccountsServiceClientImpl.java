@@ -21,6 +21,7 @@ public class AccountsServiceClientImpl implements AccountsServiceClient {
     private final Retry accountsServiceRetry;
     private final CircuitBreaker accountsServiceCB;
 
+    @Override
     public Mono<Void> transfer(TransferOperationDto dto) {
         return accountsWebClient
                 .post()

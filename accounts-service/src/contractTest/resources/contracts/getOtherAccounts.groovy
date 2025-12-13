@@ -6,7 +6,10 @@ Contract.make {
     description("Should getAllAccounts for transfer by ID")
     request {
         method GET()
-        urlPath("/accounts/3") {}
+        url("/accounts/3")
+        headers {
+            contentType(applicationJson())
+        }
     }
     response {
         status OK()
@@ -15,19 +18,8 @@ Contract.make {
         }
         body(
                 [
-                        [
-                            id: "1",
-                            phone: "89996665522",
-                            name: "Test",
-                            surname: "Test"
-                        ],
-                        [
-
-                            id: "2",
-                            phone: "89106665522",
-                            name: "Ne test",
-                            surname: "Ne test"
-                        ]
+                        [id: "1", ownerId: "2", currency: "RUB", name: "Test", surname: "Test", phone: "89996665522"] as Map,
+                        [id: "2", ownerId: "2", currency: "EUR", name: "Test", surname: "Test", phone: "89996665522"] as Map
                 ]
         )
     }

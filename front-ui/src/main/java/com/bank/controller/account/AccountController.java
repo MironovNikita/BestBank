@@ -1,7 +1,8 @@
 package com.bank.controller.account;
 
-import com.bank.dto.account.AccountPasswordChangeDto;
-import com.bank.dto.account.AccountUpdateDto;
+import com.bank.dto.account.AccountCreateDto;
+import com.bank.dto.account.AccountDeleteDto;
+import com.bank.dto.account.AccountEditDto;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
@@ -26,84 +27,134 @@ public class AccountController {
     private final Retry accountsServiceRetry;
     private final CircuitBreaker accountsServiceCB;
 
-    @PostMapping("/editPassword")
-    public Mono<String> editPassword(@ModelAttribute AccountPasswordChangeDto changePass, WebSession session) {
+    @PostMapping("/accounts/create")
+    public Mono<String> createAccount(@ModelAttribute AccountCreateDto createRq, WebSession session) {
+        createRq.setEmail(session.getAttribute("email"));
 
         return checkUserId(session)
-                .flatMap(userId -> accountsWebClient
-                        .post()
-                        .uri("/accounts/{id}/editPassword", userId)
-                        .bodyValue(changePass)
-                        .exchangeToMono(resp -> {
-                            if (resp.statusCode().is4xxClientError()) {
-                                return resp.bodyToMono(String.class)
-                                        .map(msg -> {
-                                            log.error("4хх ошибка при обращении (изменение пароля) к accounts-service: {}", msg);
-                                            session.getAttributes().put("accountErrors", List.of(msg));
-                                            return "redirect:/main";
-                                        });
-                            }
-                            if (resp.statusCode().is5xxServerError()) {
-                                return resp.bodyToMono(String.class)
-                                        .flatMap(msg -> Mono.error(new RuntimeException(msg)));
-                            }
-                            return resp.releaseBody()
-                                    .then(Mono.fromCallable(() -> {
-                                        session.getAttributes().put("successPasswordMessage", "Пароль был успешно изменён");
-                                        return "redirect:/main";
-                                    }));
-                        })
-                        .onErrorResume(ex -> {
-                            log.error("5хх ошибка при обращении (изменение пароля) к accounts-service: {}", ex.getMessage());
-                            session.getAttributes().put("passwordErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
-                            return Mono.just("redirect:/main");
-                        })
-                )
+                .flatMap(userId ->
+                        accountsWebClient
+                                .post()
+                                .uri("/accounts/create/{id}", userId)
+                                .bodyValue(createRq)
+                                .exchangeToMono(resp -> {
+
+                                    if (resp.statusCode().is4xxClientError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> {
+                                                    log.error("4хх ошибка при обращении (создание счёта) к accounts-service: {}", msg);
+                                                    session.getAttributes().put("accountListErrors", List.of(msg));
+                                                    return Mono.just("redirect:/main");
+                                                });
+                                    }
+                                    if (resp.statusCode().is5xxServerError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                                    }
+                                    return resp.releaseBody()
+                                            .then(Mono.fromCallable(() -> {
+                                                session.getAttributes().put("accountListSuccess", "Счёт успешно создан");
+                                                return "redirect:/main";
+                                            }));
+                                })
+                                .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
+                                .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                                .onErrorResume(ex -> {
+                                    log.error("Произошла ошибка при обращении (создание счёта) к accounts-service: {}", ex.getMessage());
+                                    session.getAttributes().put("accountListErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
+                                    return Mono.just("redirect:/main");
+                                }))
                 .onErrorResume(ex -> {
-                    log.error("Ошибка при проверке userId (изменение пароля)");
-                    session.getAttributes().put("passwordErrors", List.of(ex.getMessage()));
+                    log.error("Ошибка авторизации: {}", ex.getMessage());
+                    session.getAttributes().put("accountListErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
                     return Mono.just("redirect:/main");
                 });
     }
 
-    @PostMapping("/editAccount")
-    public Mono<String> editAccount(@ModelAttribute AccountUpdateDto accountUpdateDto, WebSession session) {
+    @PostMapping("/accounts/edit")
+    public Mono<String> editAccount(@ModelAttribute AccountEditDto editRq, WebSession session) {
+        editRq.setEmail(session.getAttribute("email"));
 
         return checkUserId(session)
-                .flatMap(userId -> accountsWebClient
-                        .post()
-                        .uri("/accounts/{id}/editAccount", userId)
-                        .bodyValue(accountUpdateDto)
-                        .exchangeToMono(resp -> {
-                            if (resp.statusCode().is4xxClientError()) {
-                                return resp.bodyToMono(String.class)
-                                        .map(msg -> {
-                                            log.error("4хх ошибка при обращении (изменение аккаунта) к accounts-service: {}", msg);
-                                            session.getAttributes().put("accountErrors", List.of(msg));
-                                            return "redirect:/main";
-                                        });
-                            }
-                            if (resp.statusCode().is5xxServerError()) {
-                                return resp.bodyToMono(String.class)
-                                        .flatMap(msg -> Mono.error(new RuntimeException(msg)));
-                            }
-                            return resp.releaseBody()
-                                    .then(Mono.fromCallable(() -> {
-                                        session.getAttributes().put("successUpdateAccMessage", "Аккаунт был успешно обновлён");
-                                        return "redirect:/main";
-                                    }));
-                        })
-                        .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
-                        .transformDeferred(RetryOperator.of(accountsServiceRetry))
-                        .onErrorResume(ex -> {
-                            log.error("5хх ошибка при обращении (изменение аккаунта) к accounts-service: {}", ex.getMessage());
-                            session.getAttributes().put("accountErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
-                            return Mono.just("redirect:/main");
-                        })
-                )
+                .flatMap(userId ->
+                        accountsWebClient
+                                .post()
+                                .uri("/accounts/edit")
+                                .bodyValue(editRq)
+                                .exchangeToMono(resp -> {
+                                    if (resp.statusCode().is4xxClientError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> {
+                                                    log.error("4хх ошибка при обращении (изменение счёта) к accounts-service: {}", msg);
+                                                    session.getAttributes().put("accountListErrors", List.of(msg));
+                                                    return Mono.just("redirect:/main");
+                                                });
+                                    }
+                                    if (resp.statusCode().is5xxServerError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                                    }
+                                    return resp.releaseBody()
+                                            .then(Mono.fromCallable(() -> {
+                                                session.getAttributes().put("accountListSuccess", "Счёт успешно изменён");
+                                                return "redirect:/main";
+                                            }));
+                                })
+                                .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
+                                .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                                .onErrorResume(ex -> {
+                                    log.error("Произошла ошибка при обращении (изменение счёта) к accounts-service: {}", ex.getMessage());
+                                    session.getAttributes().put("accountListErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
+                                    return Mono.just("redirect:/main");
+                                }))
                 .onErrorResume(ex -> {
-                    log.error("Ошибка при проверке userId (изменение аккаунта)");
-                    session.getAttributes().put("accountErrors", List.of(ex.getMessage()));
+                    log.error("Ошибка  авторизации: {}", ex.getMessage());
+                    session.getAttributes().put("accountListErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
+                    return Mono.just("redirect:/main");
+                });
+    }
+
+    @PostMapping("/accounts/delete")
+    public Mono<String> deleteAccount(@ModelAttribute AccountDeleteDto dto, WebSession session) {
+        dto.setEmail(session.getAttribute("email"));
+
+        return checkUserId(session)
+                .flatMap(userId ->
+                        accountsWebClient
+                                .post()
+                                .uri("/accounts/delete")
+                                .bodyValue(dto)
+                                .exchangeToMono(resp -> {
+
+                                    if (resp.statusCode().is4xxClientError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> {
+                                                    log.error("4хх ошибка при обращении (удаление счёта) к accounts-service: {}", msg);
+                                                    session.getAttributes().put("accountListErrors", List.of(msg));
+                                                    return Mono.just("redirect:/main");
+                                                });
+                                    }
+                                    if (resp.statusCode().is5xxServerError()) {
+                                        return resp.bodyToMono(String.class)
+                                                .flatMap(msg -> Mono.error(new RuntimeException(msg)));
+                                    }
+
+                                    return resp.releaseBody()
+                                            .then(Mono.fromCallable(() -> {
+                                                session.getAttributes().put("accountListSuccess", "Счёт успешно удалён");
+                                                return "redirect:/main";
+                                            }));
+                                })
+                                .transformDeferred(CircuitBreakerOperator.of(accountsServiceCB))
+                                .transformDeferred(RetryOperator.of(accountsServiceRetry))
+                                .onErrorResume(ex -> {
+                                    log.error("Произошла ошибка при обращении (удаление счёта) к accounts-service: {}", ex.getMessage());
+                                    session.getAttributes().put("accountListErrors", "Произошла неизвестная ошибка. Попробуйте позднее.");
+                                    return Mono.just("redirect:/main");
+                                }))
+                .onErrorResume(ex -> {
+                    log.error("Ошибка авторизации : {}", ex.getMessage());
+                    session.getAttributes().put("accountListErrors", List.of("Ошибка авторизации: " + ex.getMessage()));
                     return Mono.just("redirect:/main");
                 });
     }
@@ -115,5 +166,4 @@ public class AccountController {
         }
         return Mono.just(((Number) userIdObj).longValue());
     }
-
 }

@@ -1,10 +1,11 @@
 package com.bank.dto.transfer;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import com.bank.dto.currency.Currency;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -14,14 +15,25 @@ public class TransferOperationDto {
     @NotNull(message = "ID аккаунта отправителя не может быть пустым")
     private Long accountIdFrom;
 
+    @NotNull(message = "Исходная валюта перевода должна быть заполнена")
+    private Currency currencyFrom;
+
     @Positive(message = "ID аккаунта получателя отправителя не может быть отрицательным или 0")
     @NotNull(message = "ID аккаунта получателя отправителя не может быть пустым")
     private Long accountIdTo;
 
+    @NotNull(message = "Искомая валюта перевода должна быть заполнена")
+    private Currency currencyTo;
+
     @NotBlank(message = "Email обязательно должен быть указан")
     private String email;
 
-    @Positive(message = "Сумма перевода не может быть отрицательной или 0")
-    @NotNull(message = "Сумма перевода не может быть пустой")
-    private Long amount;
+    @Digits(integer = 10, fraction = 2, message = "Некорректный формат суммы")
+    @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")
+    @NotNull(message = "Исходная сумма перевода не может быть пустой")
+    private BigDecimal amountFrom;
+
+    @Digits(integer = 10, fraction = 2, message = "Некорректный формат суммы")
+    @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")
+    private BigDecimal amountTo;
 }

@@ -19,16 +19,17 @@ public class AccountRepositoryCustomImpl implements AccountRepositoryCustom {
                 UPDATE accounts
                 SET balance =
                             CASE
-                                WHEN id = :fromId THEN balance - :amount
-                                WHEN id = :toId THEN balance + :amount
+                                WHEN id = :fromId THEN balance - :amountFrom
+                                WHEN id = :toId THEN balance + :amountTo
                             END
-                WHERE id IN (:fromId, :toId) AND (SELECT balance FROM accounts WHERE id = :fromId) >= :amount
+                WHERE id IN (:fromId, :toId) AND (SELECT balance FROM accounts WHERE id = :fromId) >= :amountFrom
                 """;
 
         return databaseClient.sql(sql)
                 .bind("fromId", transferOperationDto.getAccountIdFrom())
                 .bind("toId", transferOperationDto.getAccountIdTo())
-                .bind("amount", transferOperationDto.getAmount())
+                .bind("amountFrom", transferOperationDto.getAmountFrom())
+                .bind("amountTo", transferOperationDto.getAmountTo())
                 .fetch()
                 .rowsUpdated()
                 .flatMap(updated -> {

@@ -1,14 +1,9 @@
 package com.bank.controller;
 
-import com.bank.dto.account.AccountMainPageDto;
-import com.bank.dto.account.AccountPasswordChangeDto;
-import com.bank.dto.account.AccountUpdateDto;
-import com.bank.dto.account.RegisterAccountRequest;
+import com.bank.dto.account.*;
 import com.bank.dto.cash.BalanceDto;
 import com.bank.dto.cash.UpdateBalanceRq;
 import com.bank.dto.transfer.TransferOperationDto;
-import com.bank.dto.login.LoginRequest;
-import com.bank.dto.login.LoginResponse;
 import com.bank.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -23,34 +18,29 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    @PostMapping("/register")
-    public Mono<Void> register(@RequestBody @Validated RegisterAccountRequest registerRequest) {
-        return accountService.register(registerRequest);
+    @GetMapping("/currencies/{id}")
+    public Flux<AccountListDto> getUserAccounts(@PathVariable(name = "id") Long userId) {
+        return accountService.getUserAccounts(userId);
     }
 
-    @GetMapping("/{id}")
-    public Flux<AccountMainPageDto> getAllAccounts(@PathVariable(name = "id") Long requestedId) {
-        return accountService.getAllAccounts(requestedId);
+    @PostMapping("/create/{id}")
+    public Mono<Void> createAccount(@Validated @RequestBody AccountCreateDto dto, @PathVariable(name = "id") Long userId) {
+        return accountService.createAccount(dto, userId);
     }
 
-    @PostMapping("/{id}/editPassword")
-    public Mono<Void> editPassword(@PathVariable(name = "id") Long id, @Validated @RequestBody AccountPasswordChangeDto passwordChangeDto) {
-        return accountService.editPassword(id, passwordChangeDto);
+    @PostMapping("/delete")
+    public Mono<Void> deleteAccount(@Validated @RequestBody AccountDeleteDto dto) {
+        return accountService.deleteAccount(dto);
     }
 
-    @PostMapping("/{id}/editAccount")
-    public Mono<Void> editAccount(@PathVariable("id") Long id, @Validated @RequestBody AccountUpdateDto accountUpdateDto) {
-        return accountService.editAccount(id, accountUpdateDto);
-    }
-
-    @PostMapping("/login")
-    public Mono<LoginResponse> login(@Validated @RequestBody LoginRequest loginRequest) {
-        return accountService.login(loginRequest);
+    @PostMapping("/edit")
+    public Mono<Void> editAccount(@Validated @RequestBody AccountEditDto dto) {
+        return accountService.editAccount(dto);
     }
 
     @GetMapping("/{id}/balance")
     public Mono<BalanceDto> getBalance(@PathVariable(name = "id") Long accountId) {
-        return accountService.getBalance(accountId);
+        return accountService.getAccountBalance(accountId);
     }
 
     @PostMapping("/{id}/balance")
@@ -61,5 +51,10 @@ public class AccountController {
     @PostMapping("/transfer")
     public Mono<Void> transfer(@Validated @RequestBody TransferOperationDto transferOperationDto) {
         return accountService.transfer(transferOperationDto);
+    }
+
+    @GetMapping("/{id}")
+    public Flux<AccountOtherListDto> getAllOtherAccounts(@PathVariable(name = "id") Long userRequestedId) {
+        return accountService.getAllOtherAccounts(userRequestedId);
     }
 }

@@ -1,6 +1,5 @@
 package com.bank.common.config;
 
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
@@ -12,7 +11,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    @LoadBalanced
     public WebClient.Builder loadBalancedWebClientBuilder() {
         return WebClient.builder();
     }
@@ -26,7 +24,7 @@ public class WebClientConfig {
         oauth.setDefaultClientRegistrationId("accounts-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("lb://accounts-service")
+                .baseUrl("http://accounts-service:8081")
                 .filter(oauth)
                 .build();
     }
@@ -40,7 +38,7 @@ public class WebClientConfig {
         oauth.setDefaultClientRegistrationId("cash-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("lb://cash-service")
+                .baseUrl("http://cash-service:8083")
                 .filter(oauth)
                 .build();
     }
@@ -54,7 +52,23 @@ public class WebClientConfig {
         oauth.setDefaultClientRegistrationId("transfers-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("lb://transfers-service")
+                .baseUrl("http://transfers-service:8082")
+                .filter(oauth)
+                .build();
+    }
+
+    @Bean
+    public WebClient exchangeServiceWebClient(
+            ReactiveClientRegistrationRepository clients,
+            ServerOAuth2AuthorizedClientRepository authClients
+    ) {
+        ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
+                new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
+
+        oauth.setDefaultClientRegistrationId("exchange-service");
+        return loadBalancedWebClientBuilder()
+                .clone()
+                .baseUrl("http://exchange-service:8087")
                 .filter(oauth)
                 .build();
     }

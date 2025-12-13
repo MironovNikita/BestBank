@@ -1,0 +1,22 @@
+replicaCount: 1
+
+image:
+  repository: transfers-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8082
+  type: ClusterIP
+  targetPort: 8082
+
+env:
+  DB_HOST: "database-postgresql"
+  DB_NAME: "TransfersDB"
+  DB_PORT: "5432"
+  SPRING_DATASOURCE_USER: "postgres"
+  SPRING_DATASOURCE_PASSWORD: "Nikita1995"
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
+  SPRING_SECURITY_OAUTH2_SECRET: "cK5F2xDqqrKzA8C4r3Exa9N8VTnO3dsP"

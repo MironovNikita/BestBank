@@ -1,6 +1,7 @@
 package com.bank.controller;
 
 import com.bank.config.MockSecurityConfig;
+import com.bank.dto.currency.Currency;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.service.TransfersService;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 import static org.mockito.Mockito.*;
 
@@ -32,7 +35,8 @@ public class TransfersControllerTest {
     @Test
     @DisplayName("Проверка метода перевода")
     void shouldTransferCorrect() {
-        TransferOperationDto dto = new TransferOperationDto(1L, 2L, "test@test.ru", 1000L);
+        TransferOperationDto dto =
+                new TransferOperationDto(1L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(200), null);
 
         when(transfersService.operateTransfer(dto)).thenReturn(Mono.empty());
 
@@ -49,7 +53,8 @@ public class TransfersControllerTest {
     @Test
     @DisplayName("Проверка метода перевода, если передана отрицательная сумма")
     void shouldNotOperateCashIfAmountIsNegative() {
-        TransferOperationDto dto = new TransferOperationDto(1L, 2L, "test@test.ru", -1000L);
+        TransferOperationDto dto =
+                new TransferOperationDto(1L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(-200), null);
 
         webClient.post()
                 .uri("/transfer")

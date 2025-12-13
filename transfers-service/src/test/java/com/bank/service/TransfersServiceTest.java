@@ -2,6 +2,7 @@ package com.bank.service;
 
 import com.bank.common.exception.TransferException;
 import com.bank.common.mapper.TransferOperationMapper;
+import com.bank.dto.currency.Currency;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.TransferOperation;
 import com.bank.repository.TransfersRepository;
@@ -14,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -31,6 +34,10 @@ public class TransfersServiceTest {
     private AccountsServiceClient accountsServiceClient;
     @Mock
     private NotificationsServiceClient notificationsServiceClient;
+    @Mock
+    private ExchangeServiceClient exchangeServiceClient;
+    @Mock
+    private BlockerServiceClient blockerServiceClient;
 
     @InjectMocks
     private TransfersServiceImpl transfersService;
@@ -38,12 +45,15 @@ public class TransfersServiceTest {
     @Test
     @DisplayName("Проверка осуществления перевода")
     void shouldTransferCorrect() {
-        TransferOperationDto dto = new TransferOperationDto(1L, 2L, "test@test.ru", 1000L);
+        TransferOperationDto dto =
+                new TransferOperationDto(1L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(1000), null);
         TransferOperation operation = new TransferOperation();
         operation.setAccountIdFrom(1L);
         operation.setAccountIdTo(2L);
-        operation.setAmount(dto.getAmount());
+        operation.setAmountFrom(dto.getAmountFrom());
 
+        when(blockerServiceClient.checkOperation()).thenReturn(Mono.just(true));
+        when(exchangeServiceClient.recountTransferAmount(dto)).thenReturn(Mono.just(BigDecimal.valueOf(10)));
         when(transferOperationMapper.toTransferOperation(dto)).thenReturn(operation);
         when(accountsServiceClient.transfer(dto)).thenReturn(Mono.empty());
         when(notificationsServiceClient.sendTransferNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
@@ -53,6 +63,8 @@ public class TransfersServiceTest {
         StepVerifier.create(transfersService.operateTransfer(dto))
                 .verifyComplete();
 
+        verify(blockerServiceClient).checkOperation();
+        verify(exchangeServiceClient).recountTransferAmount(dto);
         verify(transferOperationMapper).toTransferOperation(dto);
         verify(accountsServiceClient).transfer(dto);
         verify(notificationsServiceClient).sendTransferNotification(anyString(), anyString(), anyString());
@@ -63,12 +75,15 @@ public class TransfersServiceTest {
     @Test
     @DisplayName("Проверка осуществления перевода")
     void shouldNotTransferCorrectIfNotEnoughFunds() {
-        TransferOperationDto dto = new TransferOperationDto(1L, 2L, "test@test.ru", -1000L);
+        TransferOperationDto dto =
+                new TransferOperationDto(1L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(-1000), null);
         TransferOperation operation = new TransferOperation();
         operation.setAccountIdFrom(1L);
         operation.setAccountIdTo(2L);
-        operation.setAmount(dto.getAmount());
+        operation.setAmountFrom(dto.getAmountFrom());
 
+        when(blockerServiceClient.checkOperation()).thenReturn(Mono.just(true));
+        when(exchangeServiceClient.recountTransferAmount(dto)).thenReturn(Mono.just(BigDecimal.valueOf(-10)));
         when(transferOperationMapper.toTransferOperation(dto)).thenReturn(operation);
         when(accountsServiceClient.transfer(dto)).thenReturn(Mono.error(new TransferException()));
 
@@ -76,6 +91,8 @@ public class TransfersServiceTest {
                 .expectError(TransferException.class)
                 .verify();
 
+        verify(blockerServiceClient).checkOperation();
+        verify(exchangeServiceClient).recountTransferAmount(dto);
         verify(transferOperationMapper).toTransferOperation(dto);
         verify(accountsServiceClient).transfer(dto);
         verify(notificationsServiceClient, never()).sendTransferNotification(anyString(), anyString(), anyString());
