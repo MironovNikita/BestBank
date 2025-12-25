@@ -16,6 +16,7 @@ public class EmailController {
 
     private final EmailService emailService;
 
+    @Deprecated
     @PostMapping("/email")
     public Mono<Void> sendNotification(@Validated @RequestBody EmailNotificationDto dto) {
         return Mono.fromRunnable(() ->

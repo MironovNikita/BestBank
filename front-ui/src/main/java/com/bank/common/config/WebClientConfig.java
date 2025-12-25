@@ -20,11 +20,12 @@ public class WebClientConfig {
                                        ServerOAuth2AuthorizedClientRepository authClients) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-
+        //TODO Временно для локальных тестов
         oauth.setDefaultClientRegistrationId("accounts-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("http://accounts-service:8081")
+                //.baseUrl("http://accounts-service:8081")
+                .baseUrl("http://localhost:8081")
                 .filter(oauth)
                 .build();
     }
@@ -48,11 +49,12 @@ public class WebClientConfig {
                                         ServerOAuth2AuthorizedClientRepository authClients) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-
+        //TODO Временно для локальных тестов
         oauth.setDefaultClientRegistrationId("transfers-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("http://transfers-service:8082")
+                //.baseUrl("http://transfers-service:8082")
+                .baseUrl("http://localhost:8082")
                 .filter(oauth)
                 .build();
     }
@@ -64,11 +66,12 @@ public class WebClientConfig {
     ) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-
+        //TODO Временно для локальных тестов
         oauth.setDefaultClientRegistrationId("exchange-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("http://exchange-service:8087")
+                //.baseUrl("http://exchange-service:8087")
+                .baseUrl("http://localhost:8087")
                 .filter(oauth)
                 .build();
     }

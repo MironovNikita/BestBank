@@ -7,8 +7,9 @@ import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -16,31 +17,22 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private final WebClient notificationsWebClient;
     private final Retry notificationsServiceRetry;
     private final CircuitBreaker notificationsServiceCB;
+
+    private final KafkaTemplate<String, EmailNotificationDto> kafkaTemplate;
+
+    @Value("${spring.kafka.topic.notification}")
+    private String notificationTopic;
 
     @Override
     public Mono<Void> sendNotification(String toEmail, String subject, String text) {
         EmailNotificationDto email = new EmailNotificationDto(toEmail, subject, text);
 
-        return notificationsWebClient
-                .post()
-                .uri("/email")
-                .bodyValue(email)
-                .exchangeToMono(resp -> {
-                    if (resp.statusCode().isError()) {
-                        return resp.bodyToMono(String.class)
-                                .flatMap(msg -> {
-                                    log.error("Ошибка при отправке уведомления на почту: {}", toEmail);
-                                    return Mono.error(new RuntimeException(msg));
-                                });
-                    }
-                    log.info("Успешная отправка уведомления на почту: {}", toEmail);
-                    return Mono.empty();
-                })
+        return Mono.fromFuture(() -> kafkaTemplate.send(notificationTopic, email).toCompletableFuture())
                 .transformDeferred(CircuitBreakerOperator.of(notificationsServiceCB))
                 .transformDeferred(RetryOperator.of(notificationsServiceRetry))
+                .doOnError(e -> log.error("Ошибка отправки уведомления на {}: {}", toEmail, e.getMessage()))
                 .then();
     }
 }

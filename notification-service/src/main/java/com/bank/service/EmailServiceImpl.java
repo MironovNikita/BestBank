@@ -8,10 +8,8 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class EmailServiceImpl implements EmailService {
 
-    //Подтягиваются из config-service модуля, поэтому стоит @SuppressWarnings
     private final JavaMailSender javaMailSender;
     private final String fromMail;
 

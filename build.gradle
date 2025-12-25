@@ -49,6 +49,7 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
         implementation 'io.github.resilience4j:resilience4j-spring-boot3'
         implementation 'io.github.resilience4j:resilience4j-reactor'
+        implementation 'org.springframework.kafka:spring-kafka'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -62,6 +63,8 @@ subprojects {
         testImplementation 'io.projectreactor:reactor-test'
         testImplementation 'org.testcontainers:testcontainers'
         testImplementation 'org.testcontainers:postgresql'
+        testImplementation 'org.springframework.kafka:spring-kafka-test'
+        testImplementation 'org.awaitility:awaitility'
 
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
