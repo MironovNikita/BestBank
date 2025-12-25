@@ -39,7 +39,7 @@ public class AccountServiceTest {
     @Mock
     private SecureBase64Converter converter;
     @Mock
-    private NotificationService notificationService;
+    private NotificationsService notificationsService;
 
     @InjectMocks
     private AccountServiceImpl accountService;
@@ -72,7 +72,7 @@ public class AccountServiceTest {
         when(accountMapper.toAccount(dto, userId)).thenReturn(account);
         when(accountRepository.save(account)).thenReturn(Mono.just(account));
         when(converter.decrypt(anyString())).thenReturn("test@test.ru");
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(accountService.createAccount(dto, userId))
                 .verifyComplete();
@@ -80,7 +80,7 @@ public class AccountServiceTest {
         verify(accountMapper).toAccount(dto, userId);
         verify(accountRepository).save(account);
         verify(converter).decrypt(anyString());
-        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -92,7 +92,7 @@ public class AccountServiceTest {
         when(accountRepository.getAccountBalance(accountId)).thenReturn(Mono.just(BigDecimal.valueOf(0)));
         when(accountRepository.deleteById(accountId)).thenReturn(Mono.empty());
         when(converter.decrypt(anyString())).thenReturn("test@test.ru");
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(accountService.deleteAccount(dto))
                 .verifyComplete();
@@ -100,7 +100,7 @@ public class AccountServiceTest {
         verify(accountRepository).getAccountBalance(accountId);
         verify(accountRepository).deleteById(accountId);
         verify(converter).decrypt(anyString());
-        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -118,7 +118,7 @@ public class AccountServiceTest {
         verify(accountRepository).getAccountBalance(accountId);
         verify(accountRepository, never()).deleteById(accountId);
         verify(converter, never()).decrypt(anyString());
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -129,14 +129,14 @@ public class AccountServiceTest {
 
         when(accountRepository.editAccountTitleById(accountId, dto.getNewTitle())).thenReturn(Mono.just(1));
         when(converter.decrypt(anyString())).thenReturn("test@test.ru");
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(accountService.editAccount(dto))
                 .verifyComplete();
 
         verify(accountRepository).editAccountTitleById(accountId, dto.getNewTitle());
         verify(converter).decrypt(anyString());
-        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test

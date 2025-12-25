@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final UserRepository userRepository;
-    private final NotificationService notificationService;
+    private final NotificationsService notificationsService;
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final SecureBase64Converter converter;
@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
                 .flatMap(usr -> {
                     log.info("Успешное создание пользователя с ID: {}", usr.getId());
 
-                    notificationService.sendNotification(req.getEmail(), REGISTRATION_SUBJECT, REGISTRATION_TEXT.formatted(usr.getName(), usr.getSurname()))
+                    notificationsService.sendNotification(req.getEmail(), REGISTRATION_SUBJECT, REGISTRATION_TEXT.formatted(usr.getName(), usr.getSurname()))
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> logEmailError(req.getEmail(), ex.getMessage()))
                             .subscribe();
@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
                     user.setPassword(passwordEncoder.encode(newPassword));
 
                     String email = converter.decrypt(user.getEmail());
-                    notificationService.sendNotification(email, PASSWORD_CHANGE_SUBJECT, PASSWORD_CHANGE_TEXT)
+                    notificationsService.sendNotification(email, PASSWORD_CHANGE_SUBJECT, PASSWORD_CHANGE_TEXT)
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> logEmailError(email, ex.getMessage()))
                             .subscribe();
@@ -136,7 +136,7 @@ public class UserServiceImpl implements UserService {
                                         (userUpdateDto.getEmail() != null && !userUpdateDto.getEmail().isBlank())
                                                 ? userUpdateDto.getEmail()
                                                 : converter.decrypt(account.getEmail());
-                                notificationService.sendNotification(email, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
+                                notificationsService.sendNotification(email, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
                                         .subscribeOn(Schedulers.boundedElastic())
                                         .doOnError(ex -> logEmailError(email, ex.getMessage()))
                                         .subscribe();
@@ -171,7 +171,7 @@ public class UserServiceImpl implements UserService {
                                 log.info("Пользователь с ID {} был успешно удалён.", userId);
 
                                 String userEmail = converter.decrypt(email);
-                                notificationService.sendNotification(userEmail, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
+                                notificationsService.sendNotification(userEmail, ACCOUNT_CHANGE_SUBJECT, ACCOUNT_CHANGE_TEXT)
                                         .subscribeOn(Schedulers.boundedElastic())
                                         .doOnError(ex -> logEmailError(userEmail, ex.getMessage()))
                                         .subscribe();

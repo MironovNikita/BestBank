@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationServiceImpl implements NotificationService {
+public class NotificationsServiceImpl implements NotificationsService {
 
     private final Retry notificationsServiceRetry;
     private final CircuitBreaker notificationsServiceCB;
@@ -32,6 +32,10 @@ public class NotificationServiceImpl implements NotificationService {
         return Mono.fromFuture(() -> kafkaTemplate.send(notificationTopic, email).toCompletableFuture())
                 .transformDeferred(CircuitBreakerOperator.of(notificationsServiceCB))
                 .transformDeferred(RetryOperator.of(notificationsServiceRetry))
+                .doOnSuccess(result -> log.info("Уведомление успешно отправлено на email: {}, topic: {}, offset: {}",
+                        email,
+                        result.getRecordMetadata().topic(),
+                        result.getRecordMetadata().offset()))
                 .doOnError(e -> log.error("Ошибка отправки уведомления на {}: {}", toEmail, e.getMessage()))
                 .then();
     }

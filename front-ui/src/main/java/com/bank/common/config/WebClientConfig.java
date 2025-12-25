@@ -35,11 +35,12 @@ public class WebClientConfig {
                                    ServerOAuth2AuthorizedClientRepository authClients) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-
+        //TODO Временно для локальных тестов
         oauth.setDefaultClientRegistrationId("cash-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                .baseUrl("http://cash-service:8083")
+                //.baseUrl("http://cash-service:8083")
+                .baseUrl("http://localhost:8083")
                 .filter(oauth)
                 .build();
     }

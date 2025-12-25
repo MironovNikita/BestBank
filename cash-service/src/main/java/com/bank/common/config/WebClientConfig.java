@@ -26,23 +26,10 @@ public class WebClientConfig {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("accounts-service");
-
+        //TODO Временно для локальных тестов
         return builder
-                .baseUrl("http://accounts-service:8081")
-                .filter(oauth)
-                .build();
-    }
-
-    @Bean
-    public WebClient notificationsWebClient(
-            ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder) {
-        var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
-        oauth.setDefaultOAuth2AuthorizedClient(true);
-        oauth.setDefaultClientRegistrationId("notifications-service");
-
-        return builder
-                .baseUrl("http://notification-service:8084")
+                //.baseUrl("http://accounts-service:8081")
+                .baseUrl("http://localhost:8081")
                 .filter(oauth)
                 .build();
     }
@@ -54,9 +41,10 @@ public class WebClientConfig {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("blocker-service");
-
+        //TODO Временно для локальных тестов
         return builder
-                .baseUrl("http://blocker-service:8086")
+                //.baseUrl("http://blocker-service:8086")
+                .baseUrl("http://localhost:8086")
                 .filter(oauth)
                 .build();
     }

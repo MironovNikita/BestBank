@@ -33,7 +33,7 @@ public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private NotificationService notificationService;
+    private NotificationsService notificationsService;
     @Mock
     private AccountService accountService;
     @Mock
@@ -53,7 +53,7 @@ public class UserServiceTest {
 
         when(userMapper.toUser(rq)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(Mono.just(user));
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(userService.register(rq))
                 .verifyComplete();
@@ -80,7 +80,7 @@ public class UserServiceTest {
 
         verify(userMapper).toUser(rq);
         verify(userRepository).save(user);
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -133,7 +133,7 @@ public class UserServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("password");
         when(converter.decrypt(anyString())).thenReturn("test@test.ru");
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
         when(userRepository.save(user)).thenReturn(Mono.just(user));
 
         StepVerifier.create(userService.editPassword(userId, dto))
@@ -143,7 +143,7 @@ public class UserServiceTest {
         verify(passwordEncoder).matches(anyString(), anyString());
         verify(passwordEncoder).encode(anyString());
         verify(converter).decrypt(anyString());
-        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
         verify(userRepository).save(user);
     }
 
@@ -165,7 +165,7 @@ public class UserServiceTest {
         verify(passwordEncoder).matches(anyString(), anyString());
         verify(passwordEncoder, never()).encode(anyString());
         verify(converter, never()).decrypt(anyString());
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
         verify(userRepository, never()).save(user);
     }
 
@@ -186,7 +186,7 @@ public class UserServiceTest {
         verify(passwordEncoder, never()).matches(anyString(), anyString());
         verify(passwordEncoder, never()).encode(anyString());
         verify(converter, never()).decrypt(anyString());
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
         verify(userRepository, never()).save(user);
     }
 
@@ -200,7 +200,7 @@ public class UserServiceTest {
         when(userRepository.findUserById(userId)).thenReturn(Mono.just(user));
         when(converter.encrypt(anyString())).thenReturn("test@test.ru");
         when(userRepository.save(user)).thenReturn(Mono.just(user));
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(userService.editUser(userId, dto))
                 .verifyComplete();
@@ -208,7 +208,7 @@ public class UserServiceTest {
         verify(userRepository).findUserById(userId);
         verify(converter).encrypt(anyString());
         verify(userRepository).save(user);
-        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -229,7 +229,7 @@ public class UserServiceTest {
         verify(userRepository).findUserById(userId);
         verify(converter).encrypt(anyString());
         verify(userRepository).save(user);
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -248,7 +248,7 @@ public class UserServiceTest {
         verify(userRepository).findUserById(userId);
         verify(converter, never()).encrypt(anyString());
         verify(userRepository, never()).save(user);
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -260,7 +260,7 @@ public class UserServiceTest {
         when(accountService.getUserAccounts(userId)).thenReturn(Flux.empty());
         when(userRepository.deleteById(userId)).thenReturn(Mono.empty());
         when(converter.decrypt(anyString())).thenReturn("test@test.ru");
-        when(notificationService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(userService.deleteUser(userId, user.getEmail()))
                 .verifyComplete();
@@ -268,7 +268,7 @@ public class UserServiceTest {
         verify(accountService).getUserAccounts(userId);
         verify(userRepository).deleteById(userId);
         verify(converter).decrypt(anyString());
-        verify(notificationService).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -286,6 +286,6 @@ public class UserServiceTest {
         verify(accountService).getUserAccounts(userId);
         verify(userRepository, never()).deleteById(userId);
         verify(converter, never()).decrypt(anyString());
-        verify(notificationService, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 }

@@ -26,9 +26,10 @@ public class WebClientConfig {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("exchange-service");
-
+        //TODO Временно для локальных тестов
         return builder
-                .baseUrl("http://exchange-service:8087")
+                //.baseUrl("http://exchange-service:8087")
+                .baseUrl("http://localhost:8087")
                 .filter(oauth)
                 .build();
     }

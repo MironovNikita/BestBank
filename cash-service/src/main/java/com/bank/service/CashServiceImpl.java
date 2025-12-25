@@ -30,7 +30,7 @@ public class CashServiceImpl implements CashService {
     private final CashOperationMapper cashOperationMapper;
     private final SecureBase64Converter converter;
     private final AccountsServiceClient accountsServiceClient;
-    private final NotificationsServiceClient notificationsServiceClient;
+    private final NotificationsService notificationsService;
     private final BlockerServiceClient blockerServiceClient;
 
     @Override
@@ -52,7 +52,7 @@ public class CashServiceImpl implements CashService {
                                 log.info("Операция с наличными для пользователя {} выполнена.", cashOperation.getAccountId());
 
                                 String email = converter.decrypt(cashOperationDto.getEmail());
-                                notificationsServiceClient.sendNotification(email, CASH_OPERATION_SUBJECT, CASH_OPERATION_TEXT)
+                                notificationsService.sendNotification(email, CASH_OPERATION_SUBJECT, CASH_OPERATION_TEXT)
                                         .subscribeOn(Schedulers.boundedElastic())
                                         .doOnError(ex -> log.error("Ошибка при отправке уведомления для {}: {}", email, ex.getMessage()))
                                         .subscribe();
