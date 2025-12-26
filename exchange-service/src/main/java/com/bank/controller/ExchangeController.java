@@ -20,6 +20,7 @@ public class ExchangeController {
 
     private final ExchangeService exchangeService;
 
+    @Deprecated
     @PostMapping("/update")
     public Mono<Void> updateCurrencyRates(@RequestBody Map<Currency, BigDecimal> rates) {
         return exchangeService.updateCurrencyRates(rates);

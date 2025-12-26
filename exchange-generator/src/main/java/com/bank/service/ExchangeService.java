@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public interface ExchangeServiceClient {
+public interface ExchangeService {
 
     Mono<Void> updateExchange(Map<Currency, BigDecimal> rates);
 }

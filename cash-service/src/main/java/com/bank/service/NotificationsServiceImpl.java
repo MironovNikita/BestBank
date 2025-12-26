@@ -32,7 +32,7 @@ public class NotificationsServiceImpl implements NotificationsService {
                 .transformDeferred(CircuitBreakerOperator.of(notificationsServiceCB))
                 .transformDeferred(RetryOperator.of(notificationsServiceRetry))
                 .doOnSuccess(result -> log.info("Уведомление отправлено на email: {}, topic: {}, offset: {}",
-                        email,
+                        toEmail,
                         result.getRecordMetadata().topic(),
                         result.getRecordMetadata().offset()))
                 .doOnError(e -> log.error("Ошибка отправки уведомления на {}: {}", toEmail, e.getMessage()))
