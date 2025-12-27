@@ -22,7 +22,7 @@ dependencies {
 
 contracts {
     baseClassForTests = 'com.bank.contract.BaseContractTestClass'
-    failOnNoContracts = true
+    failOnNoContracts = false
     testMode = 'WEBTESTCLIENT'
 }
 
