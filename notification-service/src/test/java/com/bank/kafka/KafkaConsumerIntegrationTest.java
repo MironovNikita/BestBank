@@ -42,14 +42,14 @@ public class KafkaConsumerIntegrationTest {
     private KafkaTemplate<String, EmailNotificationDto> kafkaTemplate;
 
     @BeforeEach
-    void setup() {
-        Map<String, Object> producerProps = new HashMap<>();
-        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        producerProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
+    void initProducer() {
+        Map<String, Object> configs = new HashMap<>();
+        configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configs.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
 
-        kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(producerProps));
+        kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configs));
     }
 
     @Test

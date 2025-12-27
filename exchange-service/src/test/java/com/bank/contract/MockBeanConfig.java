@@ -5,8 +5,10 @@ import com.bank.dto.currency.CurrencyRateDto;
 import com.bank.dto.currency.ExchangeCountDto;
 import com.bank.service.ExchangeService;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Flux;
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+@Profile("test")
 @Configuration
 public class MockBeanConfig {
 
@@ -38,7 +41,7 @@ public class MockBeanConfig {
     }
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain securityWebFilterChain(@Autowired(required = false) ServerHttpSecurity http) {
         return http
                 .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)

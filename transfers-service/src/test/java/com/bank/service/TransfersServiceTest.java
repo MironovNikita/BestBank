@@ -42,8 +42,6 @@ public class TransfersServiceTest {
     @InjectMocks
     private TransfersServiceImpl transfersService;
 
-    //TODO ПЕРЕДЕЛАТЬ
-
     @Test
     @DisplayName("Проверка осуществления перевода")
     void shouldTransferCorrect() {
