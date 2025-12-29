@@ -1,5 +1,6 @@
 package com.bank.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
@@ -17,45 +18,45 @@ public class WebClientConfig {
 
     @Bean
     public WebClient accountsWebClient(ReactiveClientRegistrationRepository clients,
-                                       ServerOAuth2AuthorizedClientRepository authClients) {
+                                       ServerOAuth2AuthorizedClientRepository authClients,
+                                       @Value("${services.accounts.base-url}") String accountsBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-        //TODO Временно для локальных тестов
+
         oauth.setDefaultClientRegistrationId("accounts-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                //.baseUrl("http://accounts-service:8081")
-                .baseUrl("http://localhost:8081")
+                .baseUrl(accountsBaseUrl)
                 .filter(oauth)
                 .build();
     }
 
     @Bean
     public WebClient cashWebClient(ReactiveClientRegistrationRepository clients,
-                                   ServerOAuth2AuthorizedClientRepository authClients) {
+                                   ServerOAuth2AuthorizedClientRepository authClients,
+                                   @Value("${services.cash.base-url}") String cashBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-        //TODO Временно для локальных тестов
+
         oauth.setDefaultClientRegistrationId("cash-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                //.baseUrl("http://cash-service:8083")
-                .baseUrl("http://localhost:8083")
+                .baseUrl(cashBaseUrl)
                 .filter(oauth)
                 .build();
     }
 
     @Bean
     public WebClient transfersWebClient(ReactiveClientRegistrationRepository clients,
-                                        ServerOAuth2AuthorizedClientRepository authClients) {
+                                        ServerOAuth2AuthorizedClientRepository authClients,
+                                        @Value("${services.transfers.base-url}") String transfersBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-        //TODO Временно для локальных тестов
+
         oauth.setDefaultClientRegistrationId("transfers-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                //.baseUrl("http://transfers-service:8082")
-                .baseUrl("http://localhost:8082")
+                .baseUrl(transfersBaseUrl)
                 .filter(oauth)
                 .build();
     }
@@ -63,16 +64,16 @@ public class WebClientConfig {
     @Bean
     public WebClient exchangeServiceWebClient(
             ReactiveClientRegistrationRepository clients,
-            ServerOAuth2AuthorizedClientRepository authClients
+            ServerOAuth2AuthorizedClientRepository authClients,
+            @Value("${services.exchange.base-url}") String exchangeBaseUrl
     ) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
-        //TODO Временно для локальных тестов
+
         oauth.setDefaultClientRegistrationId("exchange-service");
         return loadBalancedWebClientBuilder()
                 .clone()
-                //.baseUrl("http://exchange-service:8087")
-                .baseUrl("http://localhost:8087")
+                .baseUrl(exchangeBaseUrl)
                 .filter(oauth)
                 .build();
     }

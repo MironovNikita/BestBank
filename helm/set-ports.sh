@@ -14,6 +14,7 @@ declare -A SERVICES=(
   ["blocker-service"]=8086
   ["exchange-service"]=8087
   ["exchange-generator"]=8088
+  ["kafka-ui"]=8079
 )
 
 for svc in "${!SERVICES[@]}"; do

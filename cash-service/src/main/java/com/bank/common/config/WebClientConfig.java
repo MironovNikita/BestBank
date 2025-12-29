@@ -1,5 +1,6 @@
 package com.bank.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
@@ -21,15 +22,15 @@ public class WebClientConfig {
     @Bean
     public WebClient accountsWebClient(
             ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder
+            WebClient.Builder builder,
+            @Value("${services.accounts.base-url}") String accountsBaseUrl
     ) {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("accounts-service");
-        //TODO Временно для локальных тестов
+
         return builder
-                //.baseUrl("http://accounts-service:8081")
-                .baseUrl("http://localhost:8081")
+                .baseUrl(accountsBaseUrl)
                 .filter(oauth)
                 .build();
     }
@@ -37,14 +38,15 @@ public class WebClientConfig {
     @Bean
     public WebClient blockerWebClient(
             ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder) {
+            WebClient.Builder builder,
+            @Value("${services.blocker.base-url}") String blockerBaseUrl
+    ) {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("blocker-service");
-        //TODO Временно для локальных тестов
+
         return builder
-                //.baseUrl("http://blocker-service:8086")
-                .baseUrl("http://localhost:8086")
+                .baseUrl(blockerBaseUrl)
                 .filter(oauth)
                 .build();
     }

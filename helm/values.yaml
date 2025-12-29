@@ -30,6 +30,7 @@ accounts-service:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "q3rpxNJ0K4zIKEOM0AaTTwQIDB2bLLkD"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 # -----------------------------
 # Blocker Service
@@ -77,6 +78,9 @@ cash-service:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "TcGDpj5RCoNZSwPEzbHIA4KlshZXzxyM"
+    ACCOUNTS_SERVICE_URL: "http://accounts-service:8081"
+    BLOCKER_SERVICE_URL: "http://blocker-service:8086"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 # -----------------------------
 # Database (PostgreSQL)
@@ -122,6 +126,7 @@ exchange-service:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "m2ushCEPNLlF3e3Doeu1UHvxR5L4y97t"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 # -----------------------------
 # Exchange Generator Service
@@ -143,6 +148,7 @@ exchange-generator:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "ls7aUcNo4FTeGuEGl5IQauxzpPMScgYc"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 # -----------------------------
 # Front UI
@@ -164,6 +170,10 @@ front-ui:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "TJ6sMrcWSAEqp54QEamryjy1hYB7dwVg"
+    ACCOUNTS_SERVICE_URL: "http://accounts-service:8081"
+    EXCHANGE_SERVICE_URL: "http://exchange-service:8087"
+    CASH_SERVICE_URL: "http://cash-service:8083"
+    TRANSFERS_SERVICE_URL: "http://transfers-service:8082"
 
 # -----------------------------
 # Keycloak
@@ -210,6 +220,7 @@ notification-service:
     SPRING_SECURITY_OAUTH2_SECRET: "hAXOLsHew6GeFkliWveGjICtfYO29ZDK"
     SPRING_MAIL_USERNAME: "bestbank2025@yandex.ru"
     SPRING_MAIL_PASSWORD: "yczxsbvwwsyrfvlf"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 # -----------------------------
 # Transfers Service
@@ -236,3 +247,34 @@ transfers-service:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "cK5F2xDqqrKzA8C4r3Exa9N8VTnO3dsP"
+    ACCOUNTS_SERVICE_URL: "http://accounts-service:8081"
+    EXCHANGE_SERVICE_URL: "http://exchange-service:8087"
+    BLOCKER_SERVICE_URL: "http://blocker-service:8086"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+
+# -----------------------------
+# Kafka
+# -----------------------------
+kafka:
+  enabled: true
+
+  kafka:
+    replicaCount: 1
+
+    persistence:
+      enabled: true
+      size: 1Gi
+
+    kraft:
+      clusterId: "hPdNttqdQHCc6FTHW1NV_Q"
+      nodeId: 1
+      processRoles: "broker,controller"
+
+    config:
+      numPartitions: 3
+      defaultReplicationFactor: 1
+      minInsyncReplicas: 1
+      logRetentionHours: 72
+
+  kafkaUi:
+    enabled: true

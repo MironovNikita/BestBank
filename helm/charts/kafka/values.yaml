@@ -1,0 +1,50 @@
+kafka:
+  image:
+    repository: apache/kafka
+    tag: "3.9.1"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  service:
+    type: ClusterIP
+    port: 9092
+    targetPort: 9092
+
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+    mountPath: /var/lib/kafka/data
+
+  kraft:
+    clusterId: "hPdNttqdQHCc6FTHW1NV_Q"
+    nodeId: 1
+    processRoles: "broker,controller"
+
+  config:
+    numPartitions: 3
+    defaultReplicationFactor: 1
+    minInsyncReplicas: 1
+    logRetentionHours: 72
+    autoCreateTopicsEnable: true
+    offsetsTopicReplicationFactor: 1
+    transactionStateLogReplicationFactor: 1
+    transactionStateLogMinIsr: 1
+
+kafkaUi:
+  enabled: true
+  image:
+    repository: provectuslabs/kafka-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8079
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
