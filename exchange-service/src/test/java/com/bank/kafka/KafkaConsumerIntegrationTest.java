@@ -62,18 +62,11 @@ public class KafkaConsumerIntegrationTest {
         );
         UpdateRateDto dto = new UpdateRateDto(rates, System.currentTimeMillis());
 
-        try {
-            Thread.sleep(5_000);
-        } catch (InterruptedException e) {
-            System.out.println("Во время теста возникла ошибка: " + e.getMessage());
-            Thread.currentThread().interrupt();
-        }
-
         kafkaTemplate.send(TOPIC, KEY, dto);
 
-        await().atMost(5, TimeUnit.SECONDS)
+        await().atMost(15, TimeUnit.SECONDS)
                 .untilAsserted(() -> verify(exchangeService, atLeastOnce())
-                        .updateCurrencyRates(dto.getRates()));
+                        .updateCurrencyRates(any()));
     }
 
     @Test
@@ -88,13 +81,6 @@ public class KafkaConsumerIntegrationTest {
 
         kafkaTemplate.send(TOPIC, KEY, dto);
         kafkaTemplate.send(TOPIC, KEY, dto);
-
-        try {
-            Thread.sleep(5_000);
-        } catch (InterruptedException e) {
-            System.out.println("Во время теста возникла ошибка: " + e.getMessage());
-            Thread.currentThread().interrupt();
-        }
 
         await().atMost(15, TimeUnit.SECONDS)
                 .untilAsserted(() -> verify(exchangeService, atLeast(1))

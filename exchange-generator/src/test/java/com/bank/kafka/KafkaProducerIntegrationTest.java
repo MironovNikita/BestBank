@@ -46,7 +46,7 @@ public class KafkaProducerIntegrationTest {
     private BlockingQueue<ConsumerRecord<String, UpdateRateDto>> records;
 
     @BeforeEach
-    void initConsumer() throws InterruptedException {
+    void initConsumer() {
         Map<String, Object> configs = new HashMap<>();
         configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
         configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -65,7 +65,9 @@ public class KafkaProducerIntegrationTest {
         container.setupMessageListener((MessageListener<String, UpdateRateDto>) records::add);
         container.start();
         ContainerTestUtils.waitForAssignment(container, 1);
-        Thread.sleep(500);
+
+        await().atMost(10, TimeUnit.SECONDS)
+                .until(() -> !records.isEmpty() || container.isRunning());
         records.clear();
     }
 
@@ -112,7 +114,7 @@ public class KafkaProducerIntegrationTest {
 
     @Test
     @DisplayName("Проверка корректной очерёдности сообщений")
-    void shouldMakeCorrectOrderOfMessages() throws InterruptedException {
+    void shouldMakeCorrectOrderOfMessages() {
         int quantity = 5;
         Map<Currency, BigDecimal> rates = new HashMap<>(Map.of(
                 Currency.RUB, BigDecimal.ONE,
@@ -124,12 +126,13 @@ public class KafkaProducerIntegrationTest {
             rates.put(Currency.USD, new BigDecimal("0.25" + i));
 
             exchangeService.updateExchange(rates).block();
-            Thread.sleep(200);
         }
 
         BigDecimal previous = BigDecimal.ZERO;
         for (int i = 1; i <= quantity; i++) {
-            await().atMost(5, TimeUnit.SECONDS).until(() -> !records.isEmpty());
+            await().atMost(5, TimeUnit.SECONDS)
+                    .until(() -> !records.isEmpty());
+
             ConsumerRecord<String, UpdateRateDto> record = records.poll();
             assertNotNull(record);
             BigDecimal current = record.value().getRates().get(Currency.USD);

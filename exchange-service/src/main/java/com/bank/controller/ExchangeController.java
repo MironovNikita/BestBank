@@ -20,6 +20,9 @@ public class ExchangeController {
 
     private final ExchangeService exchangeService;
 
+    /**
+     * Use generic ExchangeService via Kafka
+     */
     @Deprecated
     @PostMapping("/update")
     public Mono<Void> updateCurrencyRates(@RequestBody Map<Currency, BigDecimal> rates) {

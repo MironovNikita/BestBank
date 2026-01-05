@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.Map;
 
 @Slf4j
@@ -18,6 +19,7 @@ import java.util.Map;
 public class ExchangeServiceImpl implements ExchangeService {
 
     private final KafkaTemplate<String, UpdateRateDto> kafkaTemplate;
+    private final Clock clock;
 
     @Value("${spring.kafka.topic.exchange}")
     private String exchangeTopic;
@@ -28,7 +30,7 @@ public class ExchangeServiceImpl implements ExchangeService {
     @Override
     public Mono<Void> updateExchange(Map<Currency, BigDecimal> rates) {
 
-        UpdateRateDto dto = new UpdateRateDto(rates, System.currentTimeMillis());
+        UpdateRateDto dto = new UpdateRateDto(rates, clock.millis());
 
         return Mono.fromFuture(() -> kafkaTemplate.send(exchangeTopic, messagesKey, dto).toCompletableFuture())
                 .doOnSuccess(result -> log.info("Курсы валют были успешно обновлены: {}, topic: {}, offset: {}",

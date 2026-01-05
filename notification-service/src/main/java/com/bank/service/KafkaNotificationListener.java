@@ -32,6 +32,7 @@ public class KafkaNotificationListener {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Ошибка отправки уведомления по запросу из Kafka на email: {}, {}", dto.getTo(), e.getMessage(), e);
+            throw e;
         }
     }
 }
