@@ -7,7 +7,7 @@
 </p>
 
 # 🏦 Микросервисное приложение Best Bank
-Это микросервисное веб-приложение — банк, реализованный на Java 21 с использованием Spring Framework версии 6.1 и выше (со Spring Boot), при написании которого использовались следующие фреймворки: WebFlux, Security, Cloud, R2DBC и др. Проект управляется с помощью системы сборки Gradle. Применение вышеуказанных фреймворков позволило реализовать полностью неблокирующее взаимодействие с базами данных и построить высокопроизводительное масштабируемое веб-приложение, предусматривающее аутентификацию и ограничение доступа к API (логин/пароль). Также в проекте предусмотрено развёртывание в K8s с применением Jenkins и Helm-chart'ов. Обо всём далее.
+Это микросервисное веб-приложение — банк, реализованный на Java 21 с использованием Spring Framework версии 6.1 и выше (со Spring Boot), при написании которого использовались следующие фреймворки: WebFlux, Security, Cloud, R2DBC и др. Проект управляется с помощью системы сборки Gradle. Применение вышеуказанных фреймворков позволило реализовать полностью неблокирующее взаимодействие с базами данных и построить высокопроизводительное масштабируемое веб-приложение, предусматривающее аутентификацию и ограничение доступа к API (логин/пароль). Между рядом микросервисов настроено взаимодействие через Kafka. Также в проекте предусмотрено развёртывание в K8s с применением Jenkins и Helm-chart'ов. Обо всём далее.
 
 ## 📝 Описание
 Само приложение состоит из семи "внутренних" модулей и 1 "внешнего":
@@ -19,8 +19,10 @@
 - 🔄 exchange-generator;
 - 📩 notification-service;
 - 🖥️ front-ui.
-а также "внешнего" вспомогательного модуля:
-- 🔐 keycloak - модуль аутентификации между микросервисами (OAuth2 протокол разделяет роли клиента, владельца ресурса, сервера авторизации и сервера ресурсов).
+а также "внешних" вспомогательных модулей:
+- 🔐 keycloak - модуль аутентификации между микросервисами (OAuth2 протокол разделяет роли клиента, владельца ресурса, сервера авторизации и сервера ресурсов);
+- 🗃️ kafka - модуль брокера сообщений, позволяющего настроить асинхронное взаимодействие между микросервисами;
+- ✨ kafka-ui - веб-интерфейс с открытым исходным кодом **(provectuslabs/kafka-ui)** для управления и мониторинга кластеров Apache Kafka.
 
 **Accounts-service**
 Сервис, являющийся основным для приложения. В нём содержится база данных по счетам и учётным записям пользователей. Также он отвечает за логику проверки credentials, поступающих от front-ui при логине, проверка баланса, и т.д. Любое изменение с аккаунтом также находится в его зоне ответственности. В приложении настроен на порту 8081.
@@ -54,6 +56,38 @@
 - страница регистрации;
 - страница логина;
 - главная страница - личный кабинет, где пользователь может совершать какие-либо операции. В приложении настроен на порту 8085.
+
+Между рядом микросервисов настроено взаимодействие через Kafka:
+1) Все микросервисы, отправляющие уведомления в Notifications Service (accounts, cash и transfers).
+2) Exchange-service <-> Exchange-generator.
+
+Общая схема взаимодействия микросервисов:
+<p align="center">
+
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/scheme.png">
+
+</p>
+
+Таким образом, на сервисах Notifications и Exchange-service настроены Consumer для считывания соответствующих топиков. А в Exchange-generator, Accounts-service, Cash-service и Transfers-service настроены Producer для отправки сообщений.
+
+Пример логов взаимодействия accounts-service с сервисом уведомлений:
+```java
+2025-12-29 - 13:46:54.517 (Z)  INFO 1 ---> [boundedElastic-1] o.a.k.c.t.i.KafkaMetricsCollector : initializing Kafka metrics collector
+2025-12-29 - 13:46:54.587 (Z)  INFO 1 ---> [boundedElastic-1] o.a.k.clients.producer.KafkaProducer : [Producer clientId=producer-1] Instantiated an idempotent producer.
+2025-12-29 - 13:46:54.622 (Z)  INFO 1 ---> [boundedElastic-1] o.a.kafka.common.utils.AppInfoParser : Kafka version: 3.9.1
+2025-12-29 - 13:46:54.622 (Z)  INFO 1 ---> [boundedElastic-1] o.a.kafka.common.utils.AppInfoParser : Kafka commitId: f745dfdcee2b9851
+2025-12-29 - 13:46:54.622 (Z)  INFO 1 ---> [boundedElastic-1] o.a.kafka.common.utils.AppInfoParser : Kafka startTimeMs: 1767016014621
+2025-12-29 - 13:46:54.889 (Z)  INFO 1 ---> [kafka-producer-network-thread | producer-1] org.apache.kafka.clients.Metadata : [Producer clientId=producer-1] Cluster ID: hPdNttqdQHCc6FTHW1NV_Q
+2025-12-29 - 13:46:55.395 (Z)  INFO 1 ---> [kafka-producer-network-thread | producer-1] o.a.k.c.p.i.TransactionManager : [Producer clientId=producer-1] ProducerId set to 0 with epoch 0
+2025-12-29 - 13:46:55.420 (Z)  INFO 1 ---> [kafka-producer-network-thread | producer-1] c.b.service.NotificationsServiceImpl : Уведомление успешно отправлено на email: nikit1739@yandex.ru, topic: accounts-notifications, offset: 0
+```
+
+Также для мониторинга и управления Kafka был добавлен Kafka-UI, пример работы с которым представлен ниже:
+<p align="center">
+
+  <img src="https://github.com/MironovNikita/BestBank/blob/main/images/kafka-ui.png">
+
+</p>
 
 Благодаря keycloak реализовано межсервисное взаимодействие по OAuth2. Для этого был реализован realm, ознакомиться [**тут**](https://github.com/MironovNikita/BestBank/blob/main/common/src/main/java/com/bank/keycloak/bank-app.json). Запускается на порту 8080.
 
@@ -455,9 +489,7 @@ Contract.make {
 ./gradlew clean build publishToMavenLocal -p accounts-service -x test
 ./gradlew clean build publishToMavenLocal -p cash-service -x test
 ./gradlew clean build publishToMavenLocal -p transfers-service -x test
-./gradlew clean build publishToMavenLocal -p notification-service -x test
 ./gradlew clean build publishToMavenLocal -p blocker-service -x test
-./gradlew clean build publishToMavenLocal -p exchange-service -x test
 ```
 Каждая команда соберёт стабы для API микросервиса с сохранением в локальный репозиторий:
 <p align="center">
@@ -498,6 +530,8 @@ Contract.make {
 **`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT`**	URL публичных ключей Keycloak для проверки JWT токенов.
 
 **`SPRING_SECURITY_OAUTH2_SECRET`**	Клиентский секрет Keycloak (client secret), уникальный для каждого сервиса.
+
+**`KAFKA_BOOTSTRAP_SERVERS`** Адрес брокера Kafka для подключения.
 
 📌 Каждому микросервису в Keycloak соответствует отдельный “client” со своим секретом.
 
@@ -540,3 +574,39 @@ Contract.make {
 **`persistence.enabled`**	Включено хранение данных (PVC).
 
 **`persistence.size`**	Размер диска.
+
+### 🔗 Kafka блок
+
+**`tag: "3.9.1"`** Версия Kafka (KRaft mode)
+
+**`replicaCount: 1`** Количество брокеров (single node)
+
+**`persistence.size: 1Gi`** Размер PersistentVolume для данных
+
+**`kraft.clusterId`** Уникальный ID KRaft кластера
+
+**`kraft.nodeId: 1`** ID этого узла (1 для single node)
+
+**`kraft.processRoles: "broker,controller"`** Роли: брокер + контроллер (KRaft)
+
+**`numPartitions: 3`** Кол-во партиций по умолчанию для новых топиков
+
+**`defaultReplicationFactor: 1`** Фактор репликации (1 = без репликации)
+
+**`minInsyncReplicas: 1`** Минимум ISR для записи (acks=all)
+
+**`logRetentionHours: 72`** Хранение логов 3 дня
+
+**`autoCreateTopicsEnable: true`** Автосоздание топиков
+
+### 📊 KafkaUi блок
+
+**`port: 8079`** Порт Kafka UI веб-интерфейса
+
+**`resources.requests.cpu: 500m`** - Минимальный CPU (0.5 core)
+
+**`resources.requests.memory: 512Mi`** Минимальная RAM
+
+**`resources.limits.cpu: 1000m`** - Максимальный CPU (1 core)
+
+**`resources.limits.memory: 1Gi`** - Максимальная RAM

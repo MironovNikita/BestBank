@@ -20,3 +20,6 @@ env:
   SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
   SPRING_SECURITY_OAUTH2_SECRET: "TcGDpj5RCoNZSwPEzbHIA4KlshZXzxyM"
+  ACCOUNTS_SERVICE_URL: "http://accounts-service:8081"
+  BLOCKER_SERVICE_URL: "http://blocker-service:8086"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"

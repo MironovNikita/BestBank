@@ -33,7 +33,7 @@ public class TransfersServiceTest {
     @Mock
     private AccountsServiceClient accountsServiceClient;
     @Mock
-    private NotificationsServiceClient notificationsServiceClient;
+    private NotificationsService notificationsService;
     @Mock
     private ExchangeServiceClient exchangeServiceClient;
     @Mock
@@ -55,10 +55,10 @@ public class TransfersServiceTest {
         when(blockerServiceClient.checkOperation()).thenReturn(Mono.just(true));
         when(exchangeServiceClient.recountTransferAmount(dto)).thenReturn(Mono.just(BigDecimal.valueOf(10)));
         when(transferOperationMapper.toTransferOperation(dto)).thenReturn(operation);
+        when(transfersRepository.save(operation)).thenReturn(Mono.just(operation));
         when(accountsServiceClient.transfer(dto)).thenReturn(Mono.empty());
-        when(notificationsServiceClient.sendTransferNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
         when(converter.decrypt(anyString())).thenReturn(dto.getEmail());
-        when(transfersRepository.save(operation)).thenReturn(Mono.empty());
+        when(notificationsService.sendTransferNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(transfersService.operateTransfer(dto))
                 .verifyComplete();
@@ -67,13 +67,13 @@ public class TransfersServiceTest {
         verify(exchangeServiceClient).recountTransferAmount(dto);
         verify(transferOperationMapper).toTransferOperation(dto);
         verify(accountsServiceClient).transfer(dto);
-        verify(notificationsServiceClient).sendTransferNotification(anyString(), anyString(), anyString());
         verify(converter).decrypt(anyString());
+        verify(notificationsService).sendTransferNotification(anyString(), anyString(), anyString());
         verify(transfersRepository).save(operation);
     }
 
     @Test
-    @DisplayName("Проверка осуществления перевода")
+    @DisplayName("Проверка отказа в переводе, если недостаточно средств")
     void shouldNotTransferCorrectIfNotEnoughFunds() {
         TransferOperationDto dto =
                 new TransferOperationDto(1L, Currency.RUB, 2L, Currency.EUR, "test@test.ru", BigDecimal.valueOf(-1000), null);
@@ -85,7 +85,9 @@ public class TransfersServiceTest {
         when(blockerServiceClient.checkOperation()).thenReturn(Mono.just(true));
         when(exchangeServiceClient.recountTransferAmount(dto)).thenReturn(Mono.just(BigDecimal.valueOf(-10)));
         when(transferOperationMapper.toTransferOperation(dto)).thenReturn(operation);
+        when(transfersRepository.save(operation)).thenReturn(Mono.just(operation));
         when(accountsServiceClient.transfer(dto)).thenReturn(Mono.error(new TransferException()));
+        when(transfersRepository.delete(any(TransferOperation.class))).thenReturn(Mono.empty());
 
         StepVerifier.create(transfersService.operateTransfer(dto))
                 .expectError(TransferException.class)
@@ -94,9 +96,9 @@ public class TransfersServiceTest {
         verify(blockerServiceClient).checkOperation();
         verify(exchangeServiceClient).recountTransferAmount(dto);
         verify(transferOperationMapper).toTransferOperation(dto);
+        verify(transfersRepository).save(any());
         verify(accountsServiceClient).transfer(dto);
-        verify(notificationsServiceClient, never()).sendTransferNotification(anyString(), anyString(), anyString());
-        verify(transfersRepository, never()).save(any());
+        verify(notificationsService, never()).sendTransferNotification(anyString(), anyString(), anyString());
         verify(converter, never()).decrypt(anyString());
     }
 }

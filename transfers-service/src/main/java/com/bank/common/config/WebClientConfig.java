@@ -1,5 +1,6 @@
 package com.bank.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
@@ -21,29 +22,15 @@ public class WebClientConfig {
     @Bean
     public WebClient accountsWebClient(
             ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder
+            WebClient.Builder builder,
+            @Value("${services.accounts.base-url}") String accountsBaseUrl
     ) {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("accounts-service");
 
         return builder
-                .baseUrl("http://accounts-service:8081")
-                .filter(oauth)
-                .build();
-    }
-
-    @Bean
-    public WebClient notificationsWebClient(
-            ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder
-    ) {
-        var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
-        oauth.setDefaultOAuth2AuthorizedClient(true);
-        oauth.setDefaultClientRegistrationId("notifications-service");
-
-        return builder
-                .baseUrl("http://notification-service:8084")
+                .baseUrl(accountsBaseUrl)
                 .filter(oauth)
                 .build();
     }
@@ -51,14 +38,16 @@ public class WebClientConfig {
     @Bean
     public WebClient exchangeWebClient(
             ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder
+            WebClient.Builder builder,
+            @Value("${services.exchange.base-url}") String exchangeBaseUrl
+
     ) {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("exchange-service");
 
         return builder
-                .baseUrl("http://exchange-service:8087")
+                .baseUrl(exchangeBaseUrl)
                 .filter(oauth)
                 .build();
     }
@@ -66,14 +55,15 @@ public class WebClientConfig {
     @Bean
     public WebClient blockerWebClient(
             ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
-            WebClient.Builder builder
+            WebClient.Builder builder,
+            @Value("${services.blocker.base-url}") String blockerBaseUrl
     ) {
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultOAuth2AuthorizedClient(true);
         oauth.setDefaultClientRegistrationId("blocker-service");
 
         return builder
-                .baseUrl("http://blocker-service:8086")
+                .baseUrl(blockerBaseUrl)
                 .filter(oauth)
                 .build();
     }

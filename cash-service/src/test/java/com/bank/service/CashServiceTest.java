@@ -34,7 +34,7 @@ public class CashServiceTest {
     @Mock
     private AccountsServiceClient accountsServiceClient;
     @Mock
-    private NotificationsServiceClient notificationsServiceClient;
+    private NotificationsService notificationsService;
     @Mock
     private BlockerServiceClient blockerServiceClient;
 
@@ -57,7 +57,7 @@ public class CashServiceTest {
         when(accountsServiceClient.updateRemoteBalance(BigDecimal.valueOf(9000), accountId)).thenReturn(Mono.empty());
         when(cashRepository.save(operation)).thenReturn(Mono.just(operation));
         when(converter.decrypt(anyString())).thenReturn(dto.getEmail());
-        when(notificationsServiceClient.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(cashService.operateCash(dto))
                 .verifyComplete();
@@ -68,7 +68,7 @@ public class CashServiceTest {
         verify(accountsServiceClient).updateRemoteBalance(BigDecimal.valueOf(9000), accountId);
         verify(cashRepository).save(operation);
         verify(converter).decrypt(anyString());
-        verify(notificationsServiceClient).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -95,7 +95,7 @@ public class CashServiceTest {
         verify(accountsServiceClient, never()).updateRemoteBalance(BigDecimal.valueOf(9000L), accountId);
         verify(cashRepository, never()).save(operation);
         verify(converter, never()).decrypt(anyString());
-        verify(notificationsServiceClient, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -120,7 +120,7 @@ public class CashServiceTest {
         verify(accountsServiceClient, never()).updateRemoteBalance(BigDecimal.valueOf(9000L), accountId);
         verify(cashRepository, never()).save(operation);
         verify(converter, never()).decrypt(anyString());
-        verify(notificationsServiceClient, never()).sendNotification(anyString(), anyString(), anyString());
+        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
 
     }
 }

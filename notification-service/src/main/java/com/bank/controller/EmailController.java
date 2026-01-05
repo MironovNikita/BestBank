@@ -16,6 +16,10 @@ public class EmailController {
 
     private final EmailService emailService;
 
+    /**
+     * Use generic NotificationService via Kafka
+     */
+    @Deprecated
     @PostMapping("/email")
     public Mono<Void> sendNotification(@Validated @RequestBody EmailNotificationDto dto) {
         return Mono.fromRunnable(() ->

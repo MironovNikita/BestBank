@@ -25,7 +25,7 @@ public class TransfersServiceImpl implements TransfersService {
     private final TransferOperationMapper transferOperationMapper;
     private final SecureBase64Converter converter;
     private final AccountsServiceClient accountsServiceClient;
-    private final NotificationsServiceClient notificationsServiceClient;
+    private final NotificationsService notificationsService;
     private final ExchangeServiceClient exchangeServiceClient;
     private final BlockerServiceClient blockerServiceClient;
 
@@ -56,20 +56,27 @@ public class TransfersServiceImpl implements TransfersService {
                     return preparedDto.flatMap(updatedDto -> {
                         TransferOperation operation = transferOperationMapper.toTransferOperation(updatedDto);
 
-                        return accountsServiceClient.transfer(updatedDto)
-                                .then(Mono.defer(() -> {
+                        return transfersRepository.save(operation)
+                                .flatMap(savedOperation -> accountsServiceClient.transfer(updatedDto)
+                                        .then(Mono.defer(() -> {
                                             String email = converter.decrypt(dto.getEmail());
-                                            return notificationsServiceClient.sendTransferNotification(email, TRANSFER_OPERATION_SUBJECT, TRANSFER_CHANGE_TEXT)
+                                            return notificationsService.sendTransferNotification(
+                                                            email,
+                                                            TRANSFER_OPERATION_SUBJECT,
+                                                            TRANSFER_CHANGE_TEXT
+                                                    )
                                                     .onErrorResume(ex -> {
                                                         log.error("Не удалось отправить уведомление: {}", ex.getMessage());
                                                         return Mono.empty();
-                                                    });
-                                        }
-                                ))
-                                .then(Mono.defer(() -> transfersRepository.save(operation)))
-                                .doOnSuccess(saved -> log.info("Перевод с ID {} на ID {} успешно сохранён.",
-                                        dto.getAccountIdFrom(), dto.getAccountIdTo()))
-                                .then();
+                                                    })
+                                                    .doOnSuccess(n -> log.info("Перевод с ID {} на ID {} успешно сохранён.",
+                                                            dto.getAccountIdFrom(), dto.getAccountIdTo()));
+                                        }))
+                                        .onErrorResume(ex -> {
+                                            log.error("Ошибка перевода, удаляем запись о операции: {}", ex.getMessage());
+                                            return transfersRepository.delete(savedOperation)
+                                                    .then(Mono.error(ex));
+                                        }));
                     });
                 })
                 .onErrorResume(ex -> {

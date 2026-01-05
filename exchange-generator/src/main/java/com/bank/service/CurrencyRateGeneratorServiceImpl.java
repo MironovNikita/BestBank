@@ -22,7 +22,7 @@ public class CurrencyRateGeneratorServiceImpl implements CurrencyRateGeneratorSe
     private static final BigDecimal MIN_RATE = new BigDecimal("0.01");
     private static final BigDecimal MAX_RATE = new BigDecimal("10.0");
 
-    private final ExchangeServiceClient exchangeServiceClient;
+    private final ExchangeService exchangeService;
 
     @Override
     @Scheduled(fixedRate = 60000)
@@ -44,6 +44,6 @@ public class CurrencyRateGeneratorServiceImpl implements CurrencyRateGeneratorSe
 
         log.info("Сформированы новые курсы валют: {}", rates);
 
-        exchangeServiceClient.updateExchange(rates).subscribe();
+        exchangeService.updateExchange(rates).subscribe();
     }
 }

@@ -29,7 +29,7 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-    private final NotificationService notificationService;
+    private final NotificationsService notificationsService;
     private final SecureBase64Converter converter;
 
     public Flux<AccountListDto> getUserAccounts(Long id) {
@@ -46,7 +46,7 @@ public class AccountServiceImpl implements AccountService {
                     log.info("Успешное создание счёта с ID: {}", acc.getId());
 
                     String email = converter.decrypt(dto.getEmail());
-                    notificationService.sendNotification(email, ACCOUNT_CREATION_SUBJECT, ACCOUNT_CREATION_TEXT.formatted(dto.getCurrency()))
+                    notificationsService.sendNotification(email, ACCOUNT_CREATION_SUBJECT, ACCOUNT_CREATION_TEXT.formatted(dto.getCurrency()))
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> logEmailError(email, ex.getMessage()))
                             .subscribe();
@@ -72,7 +72,7 @@ public class AccountServiceImpl implements AccountService {
                                 log.info("Успешное удаление счёта с ID: {}", dto.getId());
 
                                 String email = converter.decrypt(dto.getEmail());
-                                notificationService.sendNotification(email, ACCOUNT_DELETION_SUBJECT, ACCOUNT_DELETION_TEXT.formatted(dto.getCurrency()))
+                                notificationsService.sendNotification(email, ACCOUNT_DELETION_SUBJECT, ACCOUNT_DELETION_TEXT.formatted(dto.getCurrency()))
                                         .subscribeOn(Schedulers.boundedElastic())
                                         .doOnError(ex -> logEmailError(email, ex.getMessage()))
                                         .subscribe();
@@ -93,7 +93,7 @@ public class AccountServiceImpl implements AccountService {
                     log.info("Успешное обновление названия счёта с ID: {}", dto.getId());
 
                     String email = converter.decrypt(dto.getEmail());
-                    notificationService.sendNotification(email, ACCOUNT_UPDATE_SUBJECT, ACCOUNT_UPDATE_TEXT.formatted(dto.getCurrency()))
+                    notificationsService.sendNotification(email, ACCOUNT_UPDATE_SUBJECT, ACCOUNT_UPDATE_TEXT.formatted(dto.getCurrency()))
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(ex -> logEmailError(email, ex.getMessage()))
                             .subscribe();
