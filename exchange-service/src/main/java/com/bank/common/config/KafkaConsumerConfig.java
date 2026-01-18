@@ -64,6 +64,7 @@ public class KafkaConsumerConfig {
 
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(1);
+        factory.getContainerProperties().setObservationEnabled(true);
 
         return factory;
     }

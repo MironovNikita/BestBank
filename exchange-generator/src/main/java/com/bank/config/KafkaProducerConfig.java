@@ -57,6 +57,8 @@ public class KafkaProducerConfig {
 
     @Bean
     public KafkaTemplate<String, UpdateRateDto> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        KafkaTemplate<String, UpdateRateDto> template = new KafkaTemplate<>(producerFactory());
+        template.setObservationEnabled(true);
+        return template;
     }
 }

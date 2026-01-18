@@ -12,19 +12,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    public WebClient.Builder loadBalancedWebClientBuilder() {
-        return WebClient.builder();
-    }
-
-    @Bean
-    public WebClient accountsWebClient(ReactiveClientRegistrationRepository clients,
+    public WebClient accountsWebClient(WebClient.Builder builder,
+                                       ReactiveClientRegistrationRepository clients,
                                        ServerOAuth2AuthorizedClientRepository authClients,
                                        @Value("${services.accounts.base-url}") String accountsBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
 
         oauth.setDefaultClientRegistrationId("accounts-service");
-        return loadBalancedWebClientBuilder()
+        return builder
                 .clone()
                 .baseUrl(accountsBaseUrl)
                 .filter(oauth)
@@ -32,14 +28,15 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient cashWebClient(ReactiveClientRegistrationRepository clients,
+    public WebClient cashWebClient(WebClient.Builder builder,
+                                   ReactiveClientRegistrationRepository clients,
                                    ServerOAuth2AuthorizedClientRepository authClients,
                                    @Value("${services.cash.base-url}") String cashBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
 
         oauth.setDefaultClientRegistrationId("cash-service");
-        return loadBalancedWebClientBuilder()
+        return builder
                 .clone()
                 .baseUrl(cashBaseUrl)
                 .filter(oauth)
@@ -47,14 +44,15 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient transfersWebClient(ReactiveClientRegistrationRepository clients,
+    public WebClient transfersWebClient(WebClient.Builder builder,
+                                        ReactiveClientRegistrationRepository clients,
                                         ServerOAuth2AuthorizedClientRepository authClients,
                                         @Value("${services.transfers.base-url}") String transfersBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
 
         oauth.setDefaultClientRegistrationId("transfers-service");
-        return loadBalancedWebClientBuilder()
+        return builder
                 .clone()
                 .baseUrl(transfersBaseUrl)
                 .filter(oauth)
@@ -62,16 +60,15 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient exchangeServiceWebClient(
-            ReactiveClientRegistrationRepository clients,
-            ServerOAuth2AuthorizedClientRepository authClients,
-            @Value("${services.exchange.base-url}") String exchangeBaseUrl
-    ) {
+    public WebClient exchangeServiceWebClient(WebClient.Builder builder,
+                                              ReactiveClientRegistrationRepository clients,
+                                              ServerOAuth2AuthorizedClientRepository authClients,
+                                              @Value("${services.exchange.base-url}") String exchangeBaseUrl) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(clients, authClients);
 
         oauth.setDefaultClientRegistrationId("exchange-service");
-        return loadBalancedWebClientBuilder()
+        return builder
                 .clone()
                 .baseUrl(exchangeBaseUrl)
                 .filter(oauth)
