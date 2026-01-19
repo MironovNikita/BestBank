@@ -70,17 +70,18 @@ public class UserServiceImpl implements UserService {
         String email = converter.encrypt(loginRequest.getEmail().toLowerCase());
         return userRepository.getUserByEmail(email)
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.error("Ошибка входа. Пользователь с email {} не найден.", loginRequest.getEmail());
+                    log.error("Ошибка входа. Пользователь с email {} не найден.", loginRequest.getEmail().toLowerCase());
+                    authorizeMetrics.recordFailedLogin(loginRequest.getEmail().toLowerCase());
                     return Mono.error(new LoginException());
                 }))
                 .flatMap(user -> {
                     if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
                         log.info("Успешная проверка credentials для пользователя с email {}", loginRequest.getEmail());
-                        authorizeMetrics.recordSuccessfulLogin(email);
+                        authorizeMetrics.recordSuccessfulLogin(loginRequest.getEmail().toLowerCase());
                         return Mono.just(new LoginResponse().setId(user.getId()).setEmail(user.getEmail()).setName(user.getName()));
                     } else {
                         log.error("Ошибка входа. Неверный пароль для email: {}", loginRequest.getEmail());
-                        authorizeMetrics.recordFailedLogin(email);
+                        authorizeMetrics.recordFailedLogin(loginRequest.getEmail().toLowerCase());
                         return Mono.error(new LoginException());
                     }
                 });
