@@ -5,6 +5,7 @@ import com.bank.common.mapper.TransferOperationMapper;
 import com.bank.dto.currency.Currency;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.TransferOperation;
+import com.bank.metrics.BlockMetrics;
 import com.bank.repository.TransfersRepository;
 import com.bank.security.SecureBase64Converter;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,8 @@ public class TransfersServiceTest {
     private ExchangeServiceClient exchangeServiceClient;
     @Mock
     private BlockerServiceClient blockerServiceClient;
+    @Mock
+    private BlockMetrics blockMetrics;
 
     @InjectMocks
     private TransfersServiceImpl transfersService;
@@ -59,6 +62,7 @@ public class TransfersServiceTest {
         when(accountsServiceClient.transfer(dto)).thenReturn(Mono.empty());
         when(converter.decrypt(anyString())).thenReturn(dto.getEmail());
         when(notificationsService.sendTransferNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        doNothing().when(blockMetrics).recordAllowedOperation(anyLong(), any(), anyLong(), any(), anyString());
 
         StepVerifier.create(transfersService.operateTransfer(dto))
                 .verifyComplete();

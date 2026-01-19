@@ -9,6 +9,7 @@ import com.bank.dto.user.UserPasswordChangeDto;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
 import com.bank.entity.User;
+import com.bank.metrics.AuthorizeMetrics;
 import com.bank.repository.UserRepository;
 import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final SecureBase64Converter converter;
+    private final AuthorizeMetrics authorizeMetrics;
 
     @Override
     @Transactional
@@ -65,7 +67,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<LoginResponse> login(LoginRequest loginRequest) {
-        return userRepository.getUserByEmail(converter.encrypt(loginRequest.getEmail().toLowerCase()))
+        String email = converter.encrypt(loginRequest.getEmail().toLowerCase());
+        return userRepository.getUserByEmail(email)
                 .switchIfEmpty(Mono.defer(() -> {
                     log.error("Ошибка входа. Пользователь с email {} не найден.", loginRequest.getEmail());
                     return Mono.error(new LoginException());
@@ -73,9 +76,11 @@ public class UserServiceImpl implements UserService {
                 .flatMap(user -> {
                     if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
                         log.info("Успешная проверка credentials для пользователя с email {}", loginRequest.getEmail());
+                        authorizeMetrics.recordSuccessfulLogin(email);
                         return Mono.just(new LoginResponse().setId(user.getId()).setEmail(user.getEmail()).setName(user.getName()));
                     } else {
                         log.error("Ошибка входа. Неверный пароль для email: {}", loginRequest.getEmail());
+                        authorizeMetrics.recordFailedLogin(email);
                         return Mono.error(new LoginException());
                     }
                 });
