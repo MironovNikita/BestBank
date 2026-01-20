@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-grafana-datasources
+  labels:
+    app: grafana
+    release: {{ .Release.Name }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: {{ .Values.grafana.datasources.prometheus.name }}
+        type: prometheus
+        access: proxy
+        url: {{ .Values.grafana.datasources.prometheus.url }}
+        isDefault: true
+        editable: true
+        jsonData:
+          timeInterval: "5s"

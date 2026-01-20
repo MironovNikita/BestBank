@@ -16,3 +16,5 @@ env:
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
   SPRING_SECURITY_OAUTH2_SECRET: "ls7aUcNo4FTeGuEGl5IQauxzpPMScgYc"
   KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  TRACING_SAMPLE_PROBABILITY: "1.0"
+  ZIPKIN_BASE_URL: "http://zipkin:9411"

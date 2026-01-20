@@ -19,3 +19,5 @@ env:
   EXCHANGE_SERVICE_URL: "http://exchange-service:8087"
   CASH_SERVICE_URL: "http://cash-service:8083"
   TRANSFERS_SERVICE_URL: "http://transfers-service:8082"
+  TRACING_SAMPLE_PROBABILITY: "1.0"
+  ZIPKIN_BASE_URL: "http://zipkin:9411"

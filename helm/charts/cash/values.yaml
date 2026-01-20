@@ -23,3 +23,5 @@ env:
   ACCOUNTS_SERVICE_URL: "http://accounts-service:8081"
   BLOCKER_SERVICE_URL: "http://blocker-service:8086"
   KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  TRACING_SAMPLE_PROBABILITY: "1.0"
+  ZIPKIN_BASE_URL: "http://zipkin:9411"

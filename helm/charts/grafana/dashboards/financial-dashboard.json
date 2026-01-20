@@ -24,8 +24,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Процентное соотношение успешных и заблокированных переводов",
       "fieldConfig": {
@@ -83,8 +82,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "ffao019oh94hse"
+            "type": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(increase(bestbank_transfer_operation_blocked_total[$__range]))",
@@ -100,8 +98,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Вычисление количества переводов в течение 5 минут (успешных и неуспешных)",
       "fieldConfig": {
@@ -188,8 +185,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "ffao019oh94hse"
+            "type": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(bestbank_transfer_operation_failed_total[5m])",
@@ -205,8 +201,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Процентное соотношение успешных и заблокированных операций с наличными",
       "fieldConfig": {
@@ -268,8 +263,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Вычисление количества операций с наличными в течение 5 минут (успешных и неуспешных)",
       "fieldConfig": {
@@ -356,8 +350,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "ffao019oh94hse"
+            "type": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(bestbank_cash_operation_blocked_total[5m])",
@@ -373,8 +366,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Общее количество успешных переводов",
       "fieldConfig": {
@@ -443,8 +435,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Общее количество заблокированных переводов",
       "fieldConfig": {
@@ -513,8 +504,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Общее количество успешных операций с наличными",
       "fieldConfig": {
@@ -583,8 +573,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Общее количество заблокированных операций с наличными",
       "fieldConfig": {

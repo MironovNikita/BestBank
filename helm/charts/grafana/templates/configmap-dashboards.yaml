@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-grafana-dashboards
+  labels:
+    app: grafana
+    release: {{ .Release.Name }}
+    grafana_dashboard: "1"
+data:
+  financial-dashboard.json: |
+{{ .Files.Get "dashboards/financial-dashboard.json" | indent 4 }}
+
+  security-dashboard.json: |
+{{ .Files.Get "dashboards/security-dashboard.json" | indent 4 }}

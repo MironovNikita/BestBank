@@ -1,0 +1,29 @@
+grafana:
+  image:
+    repository: grafana/grafana
+    tag: "12.3.1"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+
+  adminUser: admin
+  adminPassword: admin
+
+  datasources:
+    prometheus:
+      name: Prometheus
+      type: prometheus
+      url: http://prometheus:9090
+      access: proxy
+      isDefault: true
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi

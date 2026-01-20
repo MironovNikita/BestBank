@@ -23,8 +23,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Процентное соотношение успешных логинов к общему количеству логинов",
       "fieldConfig": {
@@ -94,8 +93,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Показатель успешных входов в течение последних 5 минут",
       "fieldConfig": {
@@ -186,8 +184,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Проверка количества обновлений курсов валют в минуту",
       "fieldConfig": {
@@ -256,8 +253,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Метрика актуальности курсов валют - вычисление времени последнего их обновления",
       "fieldConfig": {
@@ -323,8 +319,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "ffao019oh94hse"
+        "type": "prometheus"
       },
       "description": "Метрика rate уведомлений (успешные/неуспешные) за 5 минут",
       "fieldConfig": {
@@ -426,8 +421,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "ffao019oh94hse"
+            "type": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(bestbank_notification_failed_total[5m])",

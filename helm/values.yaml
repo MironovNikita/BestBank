@@ -31,6 +31,8 @@ accounts-service:
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "q3rpxNJ0K4zIKEOM0AaTTwQIDB2bLLkD"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Blocker Service
@@ -52,6 +54,8 @@ blocker-service:
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER: "http://keycloak:8080/realms/bank-app"
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "NA1YP4xVAOQwqoVwc2x3Uj14qGxUNlvL"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Cash Service
@@ -81,6 +85,8 @@ cash-service:
     ACCOUNTS_SERVICE_URL: "http://accounts-service:8081"
     BLOCKER_SERVICE_URL: "http://blocker-service:8086"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Database (PostgreSQL)
@@ -104,7 +110,7 @@ database:
   persistence:
     enabled: true
     size: 10Gi
-    storageClassName: ""
+    storageClassName: "hostpath"
 
 # -----------------------------
 # Exchange Service
@@ -127,6 +133,8 @@ exchange-service:
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "m2ushCEPNLlF3e3Doeu1UHvxR5L4y97t"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Exchange Generator Service
@@ -149,6 +157,8 @@ exchange-generator:
     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT: "http://keycloak:8080/realms/bank-app/protocol/openid-connect/certs"
     SPRING_SECURITY_OAUTH2_SECRET: "ls7aUcNo4FTeGuEGl5IQauxzpPMScgYc"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Front UI
@@ -221,6 +231,8 @@ notification-service:
     SPRING_MAIL_USERNAME: "bestbank2025@yandex.ru"
     SPRING_MAIL_PASSWORD: "yczxsbvwwsyrfvlf"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Transfers Service
@@ -251,6 +263,8 @@ transfers-service:
     EXCHANGE_SERVICE_URL: "http://exchange-service:8087"
     BLOCKER_SERVICE_URL: "http://blocker-service:8086"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    TRACING_SAMPLE_PROBABILITY: "1.0"
+    ZIPKIN_BASE_URL: "http://zipkin:9411"
 
 # -----------------------------
 # Kafka
@@ -278,3 +292,92 @@ kafka:
 
   kafkaUi:
     enabled: true
+
+# -----------------------------
+# Zipkin
+# -----------------------------
+zipkin:
+  image:
+    repository: openzipkin/zipkin
+    tag: "3.5.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 9411
+    targetPort: 9411
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+  replicaCount: 1
+
+  storage:
+    type: mem
+
+# -----------------------------
+# Prometheus
+# -----------------------------
+prometheus:
+  image:
+    repository: prom/prometheus
+    tag: "3.9.1"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 9090
+    targetPort: 9090
+
+  storage:
+    enabled: true
+    size: 5Gi
+    storageClassName: "hostpath"
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  retention: "15d"
+
+# -----------------------------
+# Grafana
+# -----------------------------
+grafana:
+  image:
+    repository: grafana/grafana
+    tag: "12.3.1"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+
+  adminUser: admin
+  adminPassword: admin
+
+  datasources:
+    prometheus:
+      name: Prometheus
+      type: prometheus
+      url: http://prometheus:9090
+      access: proxy
+      isDefault: true
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
