@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="/org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="springAppName" source="spring.application.name"/>
+    <springProperty scope="context" name="kafkaBootstrapServers" source="spring.kafka.bootstrap-servers" defaultValue="kafka:9092"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd - HH:mm:ss.SSS (XXX)} %highlight(%5p) %clr(${PID}){magenta} ---> [%X{traceId:-}/%X{spanId:-}] [%clr(%t){green}] %clr(%c{36}){cyan} : %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="KAFKA" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>
+                {
+                    "service":"${springAppName}"
+                }
+            </customFields>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+        </encoder>
+        <topic>bestbank-logs</topic>
+        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy"/>
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/>
+        <producerConfig>bootstrap.servers=${kafkaBootstrapServers}</producerConfig>
+        <producerConfig>acks=1</producerConfig>
+        <producerConfig>linger.ms=50</producerConfig>
+        <producerConfig>retries=0</producerConfig>
+        <producerConfig>max.block.ms=0</producerConfig>
+        <producerConfig>compression.type=lz4</producerConfig>
+        <producerConfig>client.id=${springAppName}-logger</producerConfig>
+    </appender>
+
+    <appender name="KAFKA_ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="KAFKA"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="KAFKA_ASYNC"/>
+    </root>
+
+    <logger name="com.bank" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.web.reactive" level="INFO"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.springframework.r2dbc" level="INFO"/>
+</configuration>

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-logstash-config
+  labels:
+    app: logstash
+    release: {{ .Release.Name }}
+data:
+  logstash.yml: |
+    xpack.monitoring.enabled: false
+
+  logstash.conf: |
+    input {
+      kafka {
+        bootstrap_servers => "${KAFKA_BOOTSTRAP_SERVERS}"
+        topics => ["bestbank-logs"]
+        group_id => "logstash-consumer-group"
+        consumer_threads => 3
+        codec => json
+        auto_offset_reset => "earliest"
+        enable_auto_commit => true
+      }
+    }
+
+    filter {
+
+      if [level] {
+        mutate {
+          add_tag => ["level_%{level}"]
+        }
+      }
+
+      mutate {
+        add_field => { "[@metadata][index]" => "bestbank-logs-%{+YYYY.MM.dd}" }
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"]
+        index => "%{[@metadata][index]}"
+      }
+      stdout { codec => rubydebug { metadata => false } }
+    }

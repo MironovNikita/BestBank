@@ -59,6 +59,11 @@ subprojects {
         //Prometheus
         implementation 'io.micrometer:micrometer-registry-prometheus'
 
+        //Logback for Logstash
+        implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
+        //Kafka appender
+        implementation 'com.github.danielwegener:logback-kafka-appender:0.2.0-RC2'
+
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
