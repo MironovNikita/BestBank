@@ -3,11 +3,11 @@ package com.bank.service;
 import com.bank.common.exception.*;
 import com.bank.common.mapper.UserMapper;
 import com.bank.dto.account.AccountListDto;
-import com.bank.dto.user.UserUpdateDto;
-import com.bank.dto.user.RegisterUserRequest;
-import com.bank.dto.user.UserPasswordChangeDto;
 import com.bank.dto.login.LoginRequest;
 import com.bank.dto.login.LoginResponse;
+import com.bank.dto.user.RegisterUserRequest;
+import com.bank.dto.user.UserPasswordChangeDto;
+import com.bank.dto.user.UserUpdateDto;
 import com.bank.entity.User;
 import com.bank.metrics.AuthorizeMetrics;
 import com.bank.repository.UserRepository;
@@ -22,7 +22,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import static com.bank.dto.email.EmailTemplates.*;
-import static com.bank.dto.email.EmailTemplates.PASSWORD_CHANGE_TEXT;
 
 @Slf4j
 @Service

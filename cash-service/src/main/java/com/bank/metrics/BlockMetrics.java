@@ -1,6 +1,5 @@
 package com.bank.metrics;
 
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,28 +18,24 @@ public class BlockMetrics {
     }
 
     public void recordAllowedOperation(Long accountId, String ownerEmail, String operation) {
-        Counter.builder(METRIC_ALLOWED_CASH_OPERATION)
-                .tag("account_id", String.valueOf(accountId))
-                .tag("owner_email", ownerEmail)
-                .tag("operation", operation)
-                .tag("service", "cash-service")
-                .tag("status", "success")
-                .description("Allowed cash operation")
-                .register(registry)
+        registry.counter(METRIC_ALLOWED_CASH_OPERATION,
+                        "account_id", String.valueOf(accountId),
+                        "owner_email", ownerEmail,
+                        "operation", operation,
+                        "service", "cash-service",
+                        "status", "success")
                 .increment();
 
         log.debug("Успешная операция с наличными для пользователя с email {}", ownerEmail);
     }
 
     public void recordBlockedOperation(Long accountId, String ownerEmail, String operation) {
-        Counter.builder(METRIC_BLOCKED_CASH_OPERATION)
-                .tag("account_id", String.valueOf(accountId))
-                .tag("owner_email", ownerEmail)
-                .tag("operation", operation)
-                .tag("service", "cash-service")
-                .tag("status", "failure")
-                .description("Allowed cash operation")
-                .register(registry)
+        registry.counter(METRIC_BLOCKED_CASH_OPERATION,
+                        "account_id", String.valueOf(accountId),
+                        "owner_email", ownerEmail,
+                        "operation", operation,
+                        "service", "cash-service",
+                        "status", "failure")
                 .increment();
 
         log.debug("Заблокированная операция с наличными для пользователя с email {}", ownerEmail);

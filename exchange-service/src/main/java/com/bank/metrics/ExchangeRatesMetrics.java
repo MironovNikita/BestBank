@@ -1,6 +1,5 @@
 package com.bank.metrics;
 
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,22 +18,18 @@ public class ExchangeRatesMetrics {
     }
 
     public void recordSuccessfulRatesUpdate(int currenciesSize) {
-        Counter.builder(METRIC_SUCCESS_RATE_UPDATE)
-                .tag("status", "success")
-                .tag("service", "exchange-service")
-                .description("Successful currency rates update")
-                .register(registry)
+        registry.counter(METRIC_SUCCESS_RATE_UPDATE,
+                        "status", "success",
+                        "service", "exchange-service")
                 .increment();
 
         log.debug("Успешное обновление курсов валют в количестве: {} шт.", currenciesSize);
     }
 
     public void recordFailedRatesUpdate(String message) {
-        Counter.builder(METRIC_FAILED_RATE_UPDATE)
-                .tag("status", "failure")
-                .tag("service", "exchange-service")
-                .description("Successful currency rates update")
-                .register(registry)
+        registry.counter(METRIC_FAILED_RATE_UPDATE,
+                        "status", "failure",
+                        "service", "exchange-service")
                 .increment();
 
         log.debug("Неудачное обновление курсов валют по причине: {}", message);
