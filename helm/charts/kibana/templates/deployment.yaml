@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: kibana
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: kibana
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: kibana
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 5601
+              protocol: TCP
+          env:
+            - name: SERVER_NAME
+              value: {{ .Values.kibana.server.name | quote }}
+            - name: SERVER_HOST
+              value: {{ .Values.kibana.server.host | quote }}
+            - name: ELASTICSEARCH_HOSTS
+              value: {{ .Values.kibana.elasticsearch.host | quote }}
+            - name: XPACK_SECURITY_ENABLED
+              value: {{ .Values.kibana.security.enabled | quote }}
+            - name: XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY
+              value: {{ .Values.kibana.security.encryption.key.value | quote }}

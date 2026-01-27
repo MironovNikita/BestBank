@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: elasticsearch
+    release: {{ .Release.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+    - name: transport
+      port: {{ .Values.service.transportPort }}
+      targetPort: transport
+      protocol: TCP
+  selector:
+    app: elasticsearch
+    release: {{ .Release.Name }}

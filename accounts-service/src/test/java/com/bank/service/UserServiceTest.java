@@ -7,6 +7,7 @@ import com.bank.dto.user.RegisterUserRequest;
 import com.bank.dto.user.UserPasswordChangeDto;
 import com.bank.dto.user.UserUpdateDto;
 import com.bank.entity.User;
+import com.bank.metrics.AuthorizeMetrics;
 import com.bank.repository.UserRepository;
 import com.bank.security.SecureBase64Converter;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +41,8 @@ public class UserServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private SecureBase64Converter converter;
+    @Mock
+    private AuthorizeMetrics authorizeMetrics;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -92,6 +95,7 @@ public class UserServiceTest {
         when(userRepository.getUserByEmail(rq.getEmail())).thenReturn(Mono.just(user));
         when(converter.encrypt(anyString())).thenReturn("test@test.ru");
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        doNothing().when(authorizeMetrics).recordSuccessfulLogin(anyString());
 
         StepVerifier.create(userService.login(rq))
                 .expectNextMatches(resp ->

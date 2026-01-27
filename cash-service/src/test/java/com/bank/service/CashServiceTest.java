@@ -6,6 +6,7 @@ import com.bank.dto.cash.CashOperationDto;
 import com.bank.entity.CashOperation;
 import com.bank.entity.OperationType;
 import com.bank.exception.BlockerException;
+import com.bank.metrics.BlockMetrics;
 import com.bank.repository.CashRepository;
 import com.bank.security.SecureBase64Converter;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,8 @@ public class CashServiceTest {
     private NotificationsService notificationsService;
     @Mock
     private BlockerServiceClient blockerServiceClient;
+    @Mock
+    private BlockMetrics blockMetrics;
 
     @InjectMocks
     private CashServiceImpl cashService;
@@ -58,6 +61,7 @@ public class CashServiceTest {
         when(cashRepository.save(operation)).thenReturn(Mono.just(operation));
         when(converter.decrypt(anyString())).thenReturn(dto.getEmail());
         when(notificationsService.sendNotification(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+        doNothing().when(blockMetrics).recordAllowedOperation(anyLong(), anyString(), anyString());
 
         StepVerifier.create(cashService.operateCash(dto))
                 .verifyComplete();
@@ -108,7 +112,9 @@ public class CashServiceTest {
         operation.setOperation(OperationType.valueOf(dto.getOperation()));
         operation.setAmount(dto.getAmount());
 
+        when(cashOperationMapper.toCashOperation(dto)).thenReturn(operation);
         when(blockerServiceClient.checkOperation()).thenReturn(Mono.just(false));
+        when(converter.decrypt("test@test.ru")).thenReturn("test@test.ru");
 
         StepVerifier.create(cashService.operateCash(dto))
                 .expectError(BlockerException.class)
@@ -116,11 +122,10 @@ public class CashServiceTest {
 
         verify(blockerServiceClient).checkOperation();
         verify(cashOperationMapper).toCashOperation(dto);
-        verify(accountsServiceClient, never()).getCurrentAccountBalance(accountId);
-        verify(accountsServiceClient, never()).updateRemoteBalance(BigDecimal.valueOf(9000L), accountId);
-        verify(cashRepository, never()).save(operation);
-        verify(converter, never()).decrypt(anyString());
-        verify(notificationsService, never()).sendNotification(anyString(), anyString(), anyString());
-
+        verify(blockMetrics).recordBlockedOperation(eq(accountId), eq("test@test.ru"), eq("GET"));
+        verify(accountsServiceClient, never()).getCurrentAccountBalance(any());
+        verify(accountsServiceClient, never()).updateRemoteBalance(any(), any());
+        verify(cashRepository, never()).save(any());
+        verify(notificationsService, never()).sendNotification(any(), any(), any());
     }
 }

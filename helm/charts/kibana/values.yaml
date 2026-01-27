@@ -1,0 +1,34 @@
+image:
+  repository: docker.elastic.co/kibana/kibana
+  tag: "9.2.4"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5601
+
+replicaCount: 1
+
+elasticsearch:
+  host: "elasticsearch"
+  port: 9200
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 500m
+
+kibana:
+  server:
+    name: "kibana"
+    host: "0.0.0.0"
+  elasticsearch:
+    host: "http://elasticsearch:9200"
+  security:
+    enabled: false
+    encryption:
+      key:
+        value: "min-32-byte-long-strong-encryption-key-value"

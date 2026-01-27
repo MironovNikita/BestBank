@@ -26,6 +26,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
 
+    //Zipkin Kafka
+    implementation 'io.zipkin.brave:brave-instrumentation-kafka-clients'
+    implementation 'io.r2dbc:r2dbc-proxy'
+
     implementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:${springCloudContractVersion}"
     testImplementation "org.springframework.cloud:spring-cloud-starter-contract-verifier:${springCloudContractVersion}"
     testImplementation 'io.rest-assured:spring-web-test-client'

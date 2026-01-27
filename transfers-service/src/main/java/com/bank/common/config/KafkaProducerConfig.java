@@ -55,6 +55,8 @@ public class KafkaProducerConfig {
 
     @Bean
     public KafkaTemplate<String, EmailNotificationDto> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        KafkaTemplate<String, EmailNotificationDto> template = new KafkaTemplate<>(producerFactory());
+        template.setObservationEnabled(true);
+        return template;
     }
 }

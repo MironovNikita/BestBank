@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: {{ .Chart.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "{{ .Values.service.targetPort }}"
     spec:
       initContainers:
         - name: wait-for-keycloak

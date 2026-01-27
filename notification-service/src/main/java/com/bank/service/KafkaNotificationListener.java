@@ -1,6 +1,7 @@
 package com.bank.service;
 
 import com.bank.dto.email.EmailNotificationDto;
+import com.bank.metrics.NotificationMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class KafkaNotificationListener {
 
     private final EmailService emailService;
+    private final NotificationMetrics notificationMetrics;
 
     @KafkaListener(topics = {
             "${spring.kafka.topic.accounts}",
@@ -27,12 +29,14 @@ public class KafkaNotificationListener {
                        Acknowledgment ack) {
 
         try {
-            log.info("Получен запрос из Kafka (topic: {}) на отправку уведомления по email: {}", topic, dto.getTo());
-            emailService.sendEmail(dto.getTo(), dto.getSubject(), dto.getText());
+            String email = dto.getTo();
+            log.info("Получен запрос из Kafka (topic: {}) на отправку уведомления по email: {}", topic, email);
+            emailService.sendEmail(email, dto.getSubject(), dto.getText());
             ack.acknowledge();
+            notificationMetrics.recordSuccessfulNotification(email);
         } catch (Exception e) {
             log.error("Ошибка отправки уведомления по запросу из Kafka на email: {}, {}", dto.getTo(), e.getMessage(), e);
-            throw e;
+            notificationMetrics.recordFailedNotification(dto.getTo());
         }
     }
 }

@@ -60,6 +60,7 @@ public class KafkaConsumerConfig {
 
         factory.setConsumerFactory(consumerFactory());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        factory.getContainerProperties().setObservationEnabled(true);
         factory.setConcurrency(3);
 
         return factory;

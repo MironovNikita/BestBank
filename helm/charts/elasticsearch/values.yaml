@@ -1,0 +1,29 @@
+image:
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  tag: "9.2.4"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 9200
+  transportPort: 9300
+
+resources:
+  requests:
+    memory: 1Gi
+    cpu: 500m
+  limits:
+    memory: 2Gi
+    cpu: 1000m
+
+persistence:
+  size: 5Gi
+  storageClassName: "hostpath"
+
+elasticsearch:
+  javaOpts: "-Xms512m -Xmx512m"
+  security:
+    enabled: false
+    enrollment: false

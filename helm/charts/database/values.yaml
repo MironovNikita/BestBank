@@ -13,4 +13,4 @@ env:
 persistence:
   enabled: true
   size: 10Gi
-  storageClassName: ""
+  storageClassName: "hostpath"

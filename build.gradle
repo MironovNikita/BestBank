@@ -51,6 +51,19 @@ subprojects {
         implementation 'io.github.resilience4j:resilience4j-reactor'
         implementation 'org.springframework.kafka:spring-kafka'
 
+        //Zipkin
+        implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+        implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+        implementation 'io.micrometer:micrometer-tracing'
+
+        //Prometheus
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+
+        //Logback for Logstash
+        implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
+        //Kafka appender
+        implementation 'com.github.danielwegener:logback-kafka-appender:0.2.0-RC2'
+
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 

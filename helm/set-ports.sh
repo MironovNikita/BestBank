@@ -15,6 +15,12 @@ declare -A SERVICES=(
   ["exchange-service"]=8087
   ["exchange-generator"]=8088
   ["kafka-ui"]=8079
+  ["zipkin"]=9411
+  ["prometheus"]=9090
+  ["grafana"]=3000
+  ["elasticsearch"]=9300
+  ["logstash"]=5000
+  ["kibana"]=5601
 )
 
 for svc in "${!SERVICES[@]}"; do

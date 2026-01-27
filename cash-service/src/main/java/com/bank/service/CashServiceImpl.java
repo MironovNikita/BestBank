@@ -5,6 +5,7 @@ import com.bank.common.mapper.CashOperationMapper;
 import com.bank.dto.cash.CashOperationDto;
 import com.bank.entity.CashOperation;
 import com.bank.exception.BlockerException;
+import com.bank.metrics.BlockMetrics;
 import com.bank.repository.CashRepository;
 import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class CashServiceImpl implements CashService {
     private final AccountsServiceClient accountsServiceClient;
     private final NotificationsService notificationsService;
     private final BlockerServiceClient blockerServiceClient;
+    private final BlockMetrics blockMetrics;
 
     @Override
     @Transactional
@@ -42,6 +44,7 @@ public class CashServiceImpl implements CashService {
                 .flatMap(allowed -> {
                     if (!allowed) {
                         log.error("Операция с наличными была заблокирована для пользователя с ID {}", cashOperationDto.getOwnerId());
+                        blockMetrics.recordBlockedOperation(cashOperation.getAccountId(), converter.decrypt(cashOperationDto.getEmail()), cashOperationDto.getOperation());
                         return Mono.error(new BlockerException());
                     }
                     return accountsServiceClient.getCurrentAccountBalance(cashOperation.getAccountId())
@@ -52,6 +55,7 @@ public class CashServiceImpl implements CashService {
                                 log.info("Операция с наличными для пользователя {} выполнена.", cashOperation.getAccountId());
 
                                 String email = converter.decrypt(cashOperationDto.getEmail());
+                                blockMetrics.recordAllowedOperation(cashOperation.getAccountId(), email, cashOperationDto.getOperation());
                                 notificationsService.sendNotification(email, CASH_OPERATION_SUBJECT, CASH_OPERATION_TEXT)
                                         .subscribeOn(Schedulers.boundedElastic())
                                         .doOnError(ex -> log.error("Ошибка при отправке уведомления для {}: {}", email, ex.getMessage()))

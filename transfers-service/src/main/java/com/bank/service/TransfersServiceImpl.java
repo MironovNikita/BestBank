@@ -4,6 +4,7 @@ import com.bank.common.mapper.TransferOperationMapper;
 import com.bank.dto.transfer.TransferOperationDto;
 import com.bank.entity.TransferOperation;
 import com.bank.exception.BlockerException;
+import com.bank.metrics.BlockMetrics;
 import com.bank.repository.TransfersRepository;
 import com.bank.security.SecureBase64Converter;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class TransfersServiceImpl implements TransfersService {
     private final NotificationsService notificationsService;
     private final ExchangeServiceClient exchangeServiceClient;
     private final BlockerServiceClient blockerServiceClient;
+    private final BlockMetrics blockMetrics;
 
     @Override
     public Mono<Void> operateTransfer(TransferOperationDto dto) {
@@ -37,6 +39,7 @@ public class TransfersServiceImpl implements TransfersService {
                 .flatMap(allowed -> {
                     if (!allowed) {
                         log.error("Операция с наличными была заблокирована для счёта с ID {}", dto.getAccountIdFrom());
+                        blockMetrics.recordBlockedOperation(dto.getAccountIdFrom(), dto.getCurrencyFrom(), dto.getAccountIdTo(), dto.getCurrencyTo(), converter.decrypt(dto.getEmail()));
                         return Mono.error(new BlockerException());
                     }
 
@@ -60,6 +63,7 @@ public class TransfersServiceImpl implements TransfersService {
                                 .flatMap(savedOperation -> accountsServiceClient.transfer(updatedDto)
                                         .then(Mono.defer(() -> {
                                             String email = converter.decrypt(dto.getEmail());
+                                            blockMetrics.recordAllowedOperation(dto.getAccountIdFrom(), dto.getCurrencyFrom(), dto.getAccountIdTo(), dto.getCurrencyTo(), email);
                                             return notificationsService.sendTransferNotification(
                                                             email,
                                                             TRANSFER_OPERATION_SUBJECT,

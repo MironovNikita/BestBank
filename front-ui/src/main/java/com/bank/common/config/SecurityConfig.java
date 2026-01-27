@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .pathMatchers("/", "/register", "/favicon.ico").permitAll()
                         .pathMatchers(HttpMethod.GET, "/login").permitAll()
                         .pathMatchers(HttpMethod.POST, "/login").permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)

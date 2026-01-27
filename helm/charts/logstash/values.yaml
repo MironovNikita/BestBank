@@ -1,0 +1,27 @@
+image:
+  repository: docker.elastic.co/logstash/logstash
+  tag: "9.2.4"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+  beatsPort: 5044
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 500m
+
+logstash:
+  javaOpts: "-Xmx512m -Xms512m"
+
+kafka:
+  bootstrapServers: "kafka:9092"
+
+elasticsearch:
+  host: "elasticsearch"
+  port: 9200
